@@ -18,6 +18,9 @@
 		4D117772183AC8E30055CEB0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D117751183AC8E30055CEB0 /* Cocoa.framework */; };
 		4D11777A183AC8E30055CEB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4D117778183AC8E30055CEB0 /* InfoPlist.strings */; };
 		4D11777C183AC8E30055CEB0 /* LIGridControlTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */; };
+		4D117788183AC91C0055CEB0 /* LIGridControl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D117787183AC91C0055CEB0 /* LIGridControl.mm */; };
+		4D11778B183AC92B0055CEB0 /* LIGridCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11778A183AC92B0055CEB0 /* LIGridCell.m */; };
+		4D11778F183D6D2A0055CEB0 /* LISpreadsheetControl.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11778E183D6D2A0055CEB0 /* LISpreadsheetControl.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +53,12 @@
 		4D117777183AC8E30055CEB0 /* LIGridControlTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LIGridControlTests-Info.plist"; sourceTree = "<group>"; };
 		4D117779183AC8E30055CEB0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LIGridControlTests.m; sourceTree = "<group>"; };
+		4D117786183AC91C0055CEB0 /* LIGridControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGridControl.h; sourceTree = "<group>"; };
+		4D117787183AC91C0055CEB0 /* LIGridControl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LIGridControl.mm; sourceTree = "<group>"; };
+		4D117789183AC92B0055CEB0 /* LIGridCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGridCell.h; sourceTree = "<group>"; };
+		4D11778A183AC92B0055CEB0 /* LIGridCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LIGridCell.m; sourceTree = "<group>"; };
+		4D11778D183D6D2A0055CEB0 /* LISpreadsheetControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LISpreadsheetControl.h; sourceTree = "<group>"; };
+		4D11778E183D6D2A0055CEB0 /* LISpreadsheetControl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LISpreadsheetControl.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +124,7 @@
 		4D117757183AC8E30055CEB0 /* LIGridControl */ = {
 			isa = PBXGroup;
 			children = (
+				4D117785183AC8F40055CEB0 /* Classes */,
 				4D117763183AC8E30055CEB0 /* LIAppDelegate.h */,
 				4D117764183AC8E30055CEB0 /* LIAppDelegate.m */,
 				4D117766183AC8E30055CEB0 /* MainMenu.xib */,
@@ -152,6 +162,19 @@
 				4D117778183AC8E30055CEB0 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		4D117785183AC8F40055CEB0 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				4D117789183AC92B0055CEB0 /* LIGridCell.h */,
+				4D11778A183AC92B0055CEB0 /* LIGridCell.m */,
+				4D117786183AC91C0055CEB0 /* LIGridControl.h */,
+				4D117787183AC91C0055CEB0 /* LIGridControl.mm */,
+				4D11778D183D6D2A0055CEB0 /* LISpreadsheetControl.h */,
+				4D11778E183D6D2A0055CEB0 /* LISpreadsheetControl.m */,
+			);
+			path = Classes;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -255,6 +278,9 @@
 			files = (
 				4D11775E183AC8E30055CEB0 /* main.m in Sources */,
 				4D117765183AC8E30055CEB0 /* LIAppDelegate.m in Sources */,
+				4D11778B183AC92B0055CEB0 /* LIGridCell.m in Sources */,
+				4D11778F183D6D2A0055CEB0 /* LISpreadsheetControl.m in Sources */,
+				4D117788183AC91C0055CEB0 /* LIGridControl.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
