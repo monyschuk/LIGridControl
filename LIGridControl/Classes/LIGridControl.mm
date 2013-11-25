@@ -20,6 +20,24 @@
 #define DF_DIVIDER_COLOR    [NSColor gridColor]
 #define DF_BACKGROUND_COLOR [NSColor whiteColor]
 
+// LIGridControl allows users to specify row, column, row divider, and column divider sizing.
+// To do this, the class stores row and column size information as vectors of row and column spans.
+// These vectors of spans are organized in order. Row spans, for example, are organized like so:
+//
+//      [DIV 0][ROW 0], [DIV 1][ROW 1], ...[DIV N][ROW N][DIV N+1]
+//
+// That's to say, a grid with 100 rows stores 201 row spans. In general. A grid with N x M rows and columns
+// will store 2N+1 x 2M+1 spans.
+//
+// Note that if you're going to introduce a bug in display, an area ripe for confusion is this concept of grid
+// and span space. Make sure that you understand which space you're dealing with. Typically for the outside world
+// we express coordinates in grid space. the helper class LIGridArea expresses space in grid space. When working
+// internally, we typically work in span space. The helper C++ class GridArea expresses space in span space and
+// provides conversion operators that allow you to convert between the two representations.
+
+#define IS_SPAN_CELL(x)     ((x%2)>0)
+#define IS_SPAN_DIVIDER(x)  ((x%2)==0)
+
 struct GridSpan {
     GridSpan() : start(0), length(0) {}
     GridSpan(CGFloat v) : start(v), length(0) {}
@@ -43,6 +61,7 @@ struct GridSpan {
 
 typedef std::vector<GridSpan> GridSpanList;
 
+// Searches an (ordered) GridSpanList for the span index containing value, using a non-recursive binary search.
 static NSUInteger IndexOfSpanWithLocation(const GridSpanList& list, CGFloat value, BOOL match_nearest = false) {
     size_t len = list.size();
     
@@ -96,16 +115,15 @@ struct GridArea {
         return false;
     }
 
-    // type conversion
+    // type (and space) conversion
     GridArea(const LIGridArea* coord) {
-        
-        // convert from coord space to span space...
+        // convert from grid space to span space...
         rowSpan.start = coord.rowRange.location * 2 + 1; rowSpan.length = coord.rowRange.length * 2;
         columnSpan.start = coord.columnRange.location * 2 + 1; columnSpan.length = coord.columnRange.length * 2;
     }
     
     operator LIGridArea*() const {
-        // convert from span space to coord space...
+        // convert from span space to grid space...
         NSRange rowRange = NSMakeRange((rowSpan.start - 1) / 2, rowSpan.length / 2);
         NSRange columnRange = NSMakeRange((columnSpan.start - 1) / 2, columnSpan.length / 2);
 
@@ -119,19 +137,8 @@ typedef std::queue<__strong id> GridObjectQueue;
 typedef std::map<GridArea, __strong id> GridAreaMap;
 
 @implementation LIGridControl {
-    // Instance variables rowSpans and columnSpans both store divider and cell areas across each axis.
-    // For a given number of rows or columns - lets denote this j - then the size of the vector will be 2j+1,
-    // meaning to say that for 5 rows, rowSpans will contain 5 pairs (2j) of divider and row entries, plus an extra
-    // divider entry for the trailing divider (+1).
-    //
-    // When we draw, we'll frequently calculate ranges of indexes in our row and column span lists that lie within a
-    // particular rectangle. To determine whether the starting index of a given range represents either a row or column,
-    // or a row divider or column divider, we need to divide the index by 2 and check whether we have a remainder.
-    // Odd indexes denote cells while even indexes denote dividers.
-
-    GridSpanList _rowSpans, _columnSpans;
-
-    GridAreaMap _spannedAreaMap, _visibleAreaMap;
+    GridSpanList    _rowSpans, _columnSpans;
+    GridAreaMap     _spannedAreaMap, _visibleAreaMap;
     GridObjectQueue _reusableCellQueue, _reusableDividerQueue;
 }
 
@@ -255,13 +262,13 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 #pragma mark -
 #pragma mark Layout
 
-#define R_AT(x) _rowSpans[2*x+1]
-#define C_AT(x) _columnSpans[2*x+1]
+#define RAT(r)      _rowSpans[2*r+1]
+#define CAT(c)      _columnSpans[2*c+1]
 
-#define RC_RECT(r, c) NSMakeRect(C_AT(c).start, R_AT(r).start, C_AT(c).length, R_AT(r).length)
+#define RECTAT(r,c) NSMakeRect(CAT(c).start,RAT(r).start,CAT(c).length,RAT(r).length)
 
-#define NROWS ((_rowSpans.size() - 1) / 2)
-#define NCOLS ((_columnSpans.size() - 1) / 2)
+#define NROWS       _rowSpans.size()/2
+#define NCOLS       _columnSpans.size()/2
 
 - (NSSize)intrinsicContentSize {
     const GridSpan& lastRow = _rowSpans.size() ? _rowSpans.back() : GridSpan();
@@ -287,10 +294,10 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 }
 
 - (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column {
-    return RC_RECT(row, column);
+    return RECTAT(row, column);
 }
 - (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
-    return NSUnionRect(RC_RECT(rowRange.location, columnRange.location), RC_RECT(rowRange.location + rowRange.length, columnRange.location + columnRange.length));
+    return NSUnionRect(RECTAT(rowRange.location, columnRange.location), RECTAT(rowRange.location + rowRange.length, columnRange.location + columnRange.length));
 }
 
 - (NSRect)rectForRowDividerAtIndex:(NSUInteger)index {
