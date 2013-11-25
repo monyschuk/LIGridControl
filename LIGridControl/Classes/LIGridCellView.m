@@ -28,6 +28,10 @@
     [(LIGridCell *)self.cell setVerticalAlignment:verticalAlignment];
 }
 
+- (BOOL)wantsDefaultClipping {
+    return NO;
+}
+
 @end
 
 @implementation LIGridCell {

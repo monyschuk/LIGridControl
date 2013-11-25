@@ -104,6 +104,12 @@ struct GridArea {
     GridArea(GridSpan rowSpan, GridSpan colSpan) : rowSpan(rowSpan), columnSpan(colSpan) {}
     GridArea(const GridArea& other) : rowSpan(other.rowSpan), columnSpan(other.columnSpan) {}
     
+    // intersection
+    
+    bool intersects(const GridArea& other) const {
+        return (NSIntersectionRange(rowSpan, other.rowSpan).length > 0 && NSIntersectionRange(columnSpan, other.columnSpan).length > 0);
+    }
+    
     // comparsion
     bool operator<(const GridArea& other) const {
         if (rowSpan < other.rowSpan) return true;
@@ -322,7 +328,6 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     } else {
         LIGridCellView *popped = _reusableCellQueue.front();
         _reusableCellQueue.pop();
-        [popped setHidden:NO];
         return popped;
     }
 }
@@ -332,7 +337,6 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     return cellView;
 }
 - (void)enqueueReusableCell:(LIGridCellView *)cell {
-    [cell setHidden:YES];
     _reusableCellQueue.push(cell);
 }
 
@@ -342,7 +346,6 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     } else {
         LIGridDividerView *popped = _reusableDividerQueue.front();
         _reusableDividerQueue.pop();
-        [popped setHidden:NO];
         return popped;
     }
 }
@@ -352,7 +355,6 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     return dividerView;
 }
 - (void)enqueueReusableDivider:(LIGridDividerView *)divider {
-    [divider setHidden:YES];
     _reusableDividerQueue.push(divider);
 }
 
@@ -394,6 +396,11 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     }
 }
 
+- (void)setFrameSize:(NSSize)newSize {
+    [super setFrameSize:newSize];
+    [self updateSubviewsInRect:[self visibleRect]];
+}
+
 - (void)removeAllSubviews {
     if ([[self subviews] count] > 0) {
         [self setSubviews:@[]];
@@ -403,6 +410,72 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 - (void)updateSubviewsInRect:(NSRect)dirtyRect {
     NSRange rowSpanRange, columnSpanRange;
     if ([self getRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange inRect:dirtyRect]) {
+        [self recycleSubviewsOutsideOfRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange];
+        [self updateSubviewsInsideOfRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange];
+    }
+}
+
+- (void)recycleSubviewsOutsideOfRowSpanRange:(const NSRange&)rowSpanRange columnSpanRange:(const NSRange&)columnSpanRange {
+    GridArea visibleArea(rowSpanRange, columnSpanRange);
+    
+    auto it = _visibleAreaMap.cbegin();
+    while (it != _visibleAreaMap.cend()) {
+        const GridArea& area = it->first;
+        if (! area.intersects(visibleArea)) {
+            const id view = it->second;
+            
+            if ([view isKindOfClass:[LIGridCellView class]]) {
+                [self enqueueReusableCell:view];
+            } else if ([view isKindOfClass:[LIGridDividerView class]]) {
+                [self enqueueReusableDivider:view];
+            }
+            
+            _visibleAreaMap.erase(it++);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+- (void)updateSubviewsInsideOfRowSpanRange:(const NSRange&)rowSpanRange columnSpanRange:(const NSRange&)columnSpanRange {
+    NSUInteger nrows = _rowSpans.size();
+    NSUInteger ncols = _columnSpans.size();
+    
+    for (NSUInteger i = rowSpanRange.location, maxRange = rowSpanRange.location+rowSpanRange.length;
+         i <= maxRange;
+         i++) {
+        if (IS_SPAN_DIVIDER(i)) {
+            GridArea dividerArea(_rowSpans[i], GridSpan(0, ncols));
+            GridAreaMap::iterator existing = _visibleAreaMap.find(dividerArea);
+            
+            if (existing == _visibleAreaMap.end()) {
+                LIGridDividerView *dividerView = [self dequeueReusableDivider];
+                
+                dividerView.frame = NSMakeRect(0, _rowSpans[i].start, _columnSpans[ncols-1].start + _columnSpans[ncols-1].length, _rowSpans[i].length);
+                if (dividerView.superview == nil) [self addSubview:dividerView];
+                
+                _visibleAreaMap[dividerArea] = dividerView;
+            }
+        }
+    }
+    
+    for (NSUInteger i = columnSpanRange.location, maxRange = columnSpanRange.location+columnSpanRange.length;
+         i <= maxRange;
+         i++) {
+        if (IS_SPAN_DIVIDER(i)) {
+            GridArea dividerArea(GridSpan(0, nrows), _columnSpans[i]);
+            GridAreaMap::iterator existing = _visibleAreaMap.find(dividerArea);
+            
+            if (existing == _visibleAreaMap.end()) {
+                LIGridDividerView *dividerView = [self dequeueReusableDivider];
+                
+                dividerView.frame = NSMakeRect(_columnSpans[i].start, 0, _columnSpans[i].length, _rowSpans[nrows-1].start + _rowSpans[nrows-1].length);
+                if (dividerView.superview == nil) [self addSubview:dividerView];
+                
+                _visibleAreaMap[dividerArea] = dividerView;
+            }
+        }
     }
 }
 
@@ -414,6 +487,10 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 }
 - (BOOL)isFlipped {
     return YES;
+}
+
+- (BOOL)wantsDefaultClipping {
+    return NO;
 }
 
 - (BOOL)wantsUpdateLayer {

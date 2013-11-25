@@ -24,24 +24,24 @@
 #pragma mark LIGridControlDataSource
 
 - (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl {
-    return 100;
+    return 10000;
 }
 - (NSUInteger)gridControlNumberOfColumns:(LIGridControl *)gridControl {
-    return 100;
+    return 10000;
 }
 
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex {
     return 21;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowDividerAtIndex:(NSUInteger)anIndex {
-    return 1;
+    return (anIndex % 10) ? 0.5 : 2.5;
 }
 
 - (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnAtIndex:(NSUInteger)anIndex {
     return 72;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex {
-    return 1;
+    return (anIndex % 5) ? 0.5 : 2.5;
 }
 
 - (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl {
