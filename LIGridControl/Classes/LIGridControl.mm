@@ -7,33 +7,43 @@
 //
 
 #import "LIGridControl.h"
-#import "LIGridCell.h"
 
+#import "LIGridArea.h"
+#import "LIGridCellView.h"
+#import "LIGridDividerView.h"
+
+#include <map>
+#include <queue>
 #include <vector>
 #include <algorithm>
 
 #define DF_DIVIDER_COLOR    [NSColor gridColor]
 #define DF_BACKGROUND_COLOR [NSColor whiteColor]
 
-
-class LIGridSpan {
-public:
-    LIGridSpan() : start(0), length(0) {}
-    LIGridSpan(CGFloat v) : start(v), length(0) {}
-    LIGridSpan(CGFloat s, CGFloat l) : start(s), length(l) {}
-    LIGridSpan(const LIGridSpan& c) : start(c.start), length(c.length) {}
+struct GridSpan {
+    GridSpan() : start(0), length(0) {}
+    GridSpan(CGFloat v) : start(v), length(0) {}
+    GridSpan(CGFloat s, CGFloat l) : start(s), length(l) {}
+    GridSpan(const GridSpan& other) : start(other.start), length(other.length) {}
     
-    bool operator<(const LIGridSpan& other) const {
-        return start < other.start;
+    // comparison
+    bool operator<(const GridSpan& other) const {
+        if (start < other.start) return true;
+        if (other.start < start) return false;
+        
+        return false;
     }
     
-    CGFloat start, length;
+    // type conversion
+    operator NSRange() const { return NSMakeRange(start, length); }
+    GridSpan(const NSRange& range) : start(range.location), length(range.length) {}
     
+    CGFloat start, length;
 };
 
-typedef std::vector<LIGridSpan> LIGridSpanList;
+typedef std::vector<GridSpan> GridSpanList;
 
-static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL match_nearest = false) {
+static NSUInteger IndexOfSpanWithLocation(const GridSpanList& list, CGFloat value, BOOL match_nearest = false) {
     size_t len = list.size();
     
     if (len > 0) {
@@ -41,9 +51,9 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
             CGFloat minv = list[0].start;
             CGFloat maxv = list[len-1].start + list[len-1].length;
             
-            if (value < minv) {
+            if (value <= minv) {
                 return 0;
-            } else if (value > maxv) {
+            } else if (value >= maxv) {
                 return len-1;
             }
         }
@@ -70,6 +80,43 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     return NSNotFound;
 }
 
+struct GridArea {
+    GridArea() : rowSpan(GridSpan()), columnSpan(GridSpan()) {}
+    GridArea(GridSpan rowSpan, GridSpan colSpan) : rowSpan(rowSpan), columnSpan(colSpan) {}
+    GridArea(const GridArea& other) : rowSpan(other.rowSpan), columnSpan(other.columnSpan) {}
+    
+    // comparsion
+    bool operator<(const GridArea& other) const {
+        if (rowSpan < other.rowSpan) return true;
+        if (other.rowSpan < rowSpan) return false;
+        
+        if (columnSpan < other.columnSpan) return true;
+        if (other.columnSpan < columnSpan) return false;
+        
+        return false;
+    }
+
+    // type conversion
+    GridArea(const LIGridArea* coord) {
+        
+        // convert from coord space to span space...
+        rowSpan.start = coord.rowRange.location * 2 + 1; rowSpan.length = coord.rowRange.length * 2;
+        columnSpan.start = coord.columnRange.location * 2 + 1; columnSpan.length = coord.columnRange.length * 2;
+    }
+    
+    operator LIGridArea*() const {
+        // convert from span space to coord space...
+        NSRange rowRange = NSMakeRange((rowSpan.start - 1) / 2, rowSpan.length / 2);
+        NSRange columnRange = NSMakeRange((columnSpan.start - 1) / 2, columnSpan.length / 2);
+
+        return [LIGridArea areaWithRowRange:rowRange columnRange:columnRange representedObject:nil];
+    }
+    
+    GridSpan rowSpan, columnSpan;
+};
+
+typedef std::queue<__strong id> GridObjectQueue;
+typedef std::map<GridArea, __strong id> GridAreaMap;
 
 @implementation LIGridControl {
     // Instance variables rowSpans and columnSpans both store divider and cell areas across each axis.
@@ -82,11 +129,10 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     // or a row divider or column divider, we need to divide the index by 2 and check whether we have a remainder.
     // Odd indexes denote cells while even indexes denote dividers.
 
-    LIGridSpanList _rowSpans, _columnSpans;
-}
+    GridSpanList _rowSpans, _columnSpans;
 
-+ (Class)cellClass {
-    return [LIGridCell class];
+    GridAreaMap _spannedAreaMap, _visibleAreaMap;
+    GridObjectQueue _reusableCellQueue, _reusableDividerQueue;
 }
 
 #pragma mark -
@@ -105,15 +151,16 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     [self configureGridControl];
 }
 
+- (void)dealloc {
+    if (self.enclosingScrollView) [self stopObservingScrollView:self.enclosingScrollView];
+}
+
 - (void)configureGridControl {
-    _dividerColor = DF_DIVIDER_COLOR;
-    _backgroundColor = DF_BACKGROUND_COLOR;
-    
-    LIGridCell *cell = [[LIGridCell alloc] initTextCell:@"0.0"];
-    [self setCell:cell];
+    _dividerColor       = DF_DIVIDER_COLOR;
+    _backgroundColor    = DF_BACKGROUND_COLOR;
     
     [self setWantsLayer:YES];
-    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawBeforeViewResize];
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
 }
 
 #pragma mark -
@@ -130,10 +177,15 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
 - (void)reloadData {
     NSUInteger rowCount = [self.dataSource gridControlNumberOfRows:self];
     NSUInteger columnCount = [self.dataSource gridControlNumberOfColumns:self];
-    
+    NSUInteger spanningCount = [self.dataSource gridControlNumberOfFixedAreas:self];
+
+    _spannedAreaMap.clear();
+
     _rowSpans.resize(rowCount * 2 + 1);
     _columnSpans.resize(columnCount * 2 + 1);
-    
+
+    // reload row spans...
+
     NSUInteger i;
     CGFloat offset = 0;
     
@@ -152,6 +204,8 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     _rowSpans[2*i].start            = offset;
     _rowSpans[2*i].length           = [self.dataSource gridControl:self heightOfRowDividerAtIndex:i];
     
+    // reload column spans...
+    
     offset = 0;
 
     for (i = 0; i < columnCount; i++) {
@@ -169,8 +223,15 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     _columnSpans[2*i].start         = offset;
     _columnSpans[2*i].length        = [self.dataSource gridControl:self widthOfColumnDividerAtIndex:i];
     
+    // reload spanning areas...
+    
+    for (i = 0; i < spanningCount; i++) {
+        LIGridArea *coord = [self.dataSource gridControl:self fixedAreaAtIndex:i];
+        _spannedAreaMap[coord] = coord.representedObject;
+    }
+    
     [self invalidateIntrinsicContentSize];
-    [self setNeedsDisplay:YES];
+    [self updateSubviewsInRect:self.visibleRect];
 }
 
 #pragma mark -
@@ -194,22 +255,27 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
 #pragma mark -
 #pragma mark Layout
 
+#define R_AT(x) _rowSpans[2*x+1]
+#define C_AT(x) _columnSpans[2*x+1]
+
+#define RC_RECT(r, c) NSMakeRect(C_AT(c).start, R_AT(r).start, C_AT(c).length, R_AT(r).length)
+
 #define NROWS ((_rowSpans.size() - 1) / 2)
 #define NCOLS ((_columnSpans.size() - 1) / 2)
 
 - (NSSize)intrinsicContentSize {
-    const LIGridSpan& lastRow = _rowSpans.size() ? _rowSpans.back() : LIGridSpan();
-    const LIGridSpan& lastCol = _columnSpans.size() ? _columnSpans.back() : LIGridSpan();
+    const GridSpan& lastRow = _rowSpans.size() ? _rowSpans.back() : GridSpan();
+    const GridSpan& lastCol = _columnSpans.size() ? _columnSpans.back() : GridSpan();
     
     return NSMakeSize(lastCol.start + lastCol.length, lastRow.start + lastRow.length);
 }
 
 - (BOOL)getRowSpanRange:(NSRange&)rowSpanRange columnSpanRange:(NSRange&)columnSpanRange inRect:(NSRect)rect {
-    NSUInteger rlb = binary_search(_rowSpans, NSMinY(rect), true);
-    NSUInteger rub = binary_search(_rowSpans, NSMaxY(rect), true);
+    NSUInteger rlb = IndexOfSpanWithLocation(_rowSpans, NSMinY(rect), true);
+    NSUInteger rub = IndexOfSpanWithLocation(_rowSpans, NSMaxY(rect), true);
     
-    NSUInteger clb = binary_search(_columnSpans, NSMinX(rect), true);
-    NSUInteger cub = binary_search(_columnSpans, NSMaxX(rect), true);
+    NSUInteger clb = IndexOfSpanWithLocation(_columnSpans, NSMinX(rect), true);
+    NSUInteger cub = IndexOfSpanWithLocation(_columnSpans, NSMaxX(rect), true);
     
     rowSpanRange.location        = rlb;
     rowSpanRange.length          = rub - rlb;
@@ -218,6 +284,119 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     columnSpanRange.length       = cub - clb;
     
     return rowSpanRange.location != NSNotFound && columnSpanRange.location != NSNotFound;
+}
+
+- (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column {
+    return RC_RECT(row, column);
+}
+- (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
+    return NSUnionRect(RC_RECT(rowRange.location, columnRange.location), RC_RECT(rowRange.location + rowRange.length, columnRange.location + columnRange.length));
+}
+
+- (NSRect)rectForRowDividerAtIndex:(NSUInteger)index {
+    NSRect rowRect = self.bounds;
+    rowRect.origin.y = _rowSpans[index].start;
+    rowRect.size.height = _rowSpans[index].length;
+    return rowRect;
+}
+- (NSRect)rectForColumnDividerAtIndex:(NSUInteger)index {
+    NSRect columnRect = self.bounds;
+    columnRect.origin.x = _columnSpans[index].start;
+    columnRect.size.width = _columnSpans[index].length;
+    return columnRect;
+}
+
+#pragma mark -
+#pragma mark Reusable, Visible Views
+
+- (LIGridCellView *)dequeueReusableCell {
+    if (_reusableCellQueue.empty()) {
+        return [self createNewReusableCell];
+    } else {
+        LIGridCellView *popped = _reusableCellQueue.front();
+        _reusableCellQueue.pop();
+        [popped setHidden:NO];
+        return popped;
+    }
+}
+- (LIGridCellView *)createNewReusableCell {
+    LIGridCellView *cellView = [[LIGridCellView alloc] initWithFrame:NSZeroRect];
+    cellView.backgroundColor = self.backgroundColor;
+    return cellView;
+}
+- (void)enqueueReusableCell:(LIGridCellView *)cell {
+    [cell setHidden:YES];
+    _reusableCellQueue.push(cell);
+}
+
+- (LIGridDividerView *)dequeueReusableDivider {
+    if (_reusableDividerQueue.empty()) {
+        return [self createNewReusableDivider];
+    } else {
+        LIGridDividerView *popped = _reusableDividerQueue.front();
+        _reusableDividerQueue.pop();
+        [popped setHidden:NO];
+        return popped;
+    }
+}
+- (LIGridDividerView *)createNewReusableDivider {
+    LIGridDividerView *dividerView = [[LIGridDividerView alloc] initWithFrame:NSZeroRect];
+    dividerView.backgroundColor = self.dividerColor;
+    return dividerView;
+}
+- (void)enqueueReusableDivider:(LIGridDividerView *)divider {
+    [divider setHidden:YES];
+    _reusableDividerQueue.push(divider);
+}
+
+#pragma mark -
+#pragma mark Visibilty Management
+
+- (void)viewWillMoveToSuperview:(NSView *)newSuperview {
+    NSScrollView *scrollView = [self enclosingScrollView];
+    if (scrollView) [self stopObservingScrollView:scrollView];
+}
+- (void)viewDidMoveToSuperview {
+    NSScrollView *scrollView = [self enclosingScrollView];
+    if (scrollView) [self startObservingScrollView:scrollView];
+    
+    [self visibleRectDidChange:nil];
+}
+
+- (void)stopObservingScrollView:(NSScrollView *)scrollView {
+    NSClipView *clipView = scrollView.contentView;
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    
+    [notificationCenter removeObserver:self name:NSViewFrameDidChangeNotification object:clipView];
+    [notificationCenter removeObserver:self name:NSViewBoundsDidChangeNotification object:clipView];
+}
+- (void)startObservingScrollView:(NSScrollView *)scrollView {
+    NSClipView *clipView = scrollView.contentView;
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    
+    [notificationCenter addObserver:self selector:@selector(visibleRectDidChange:) name:NSViewFrameDidChangeNotification object:clipView];
+    [notificationCenter addObserver:self selector:@selector(visibleRectDidChange:) name:NSViewBoundsDidChangeNotification object:clipView];
+}
+
+- (void)visibleRectDidChange:(NSNotification *)notification {
+    if (_rowSpans.size() == 0 || _columnSpans.size() == 0) {
+        [self removeAllSubviews];
+    }
+    else {
+        [self updateSubviewsInRect:[self visibleRect]];
+    }
+}
+
+- (void)removeAllSubviews {
+    if ([[self subviews] count] > 0) {
+        [self setSubviews:@[]];
+    }
+}
+
+- (void)updateSubviewsInRect:(NSRect)dirtyRect {
+    NSRange rowSpanRange, columnSpanRange;
+    if ([self getRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange inRect:dirtyRect]) {
+    }
 }
 
 #pragma mark -
@@ -230,88 +409,13 @@ static NSUInteger binary_search(const LIGridSpanList& list, CGFloat value, BOOL 
     return YES;
 }
 
-- (void)drawRect:(NSRect)dirtyRect {
-    NSInteger rectCount;
-    const NSRect *rectArray;
-    
-    [self getRectsBeingDrawn:&rectArray count:&rectCount];
-    
-    rectArray = &dirtyRect;
-    rectCount = 1;
-    
-    [self drawBackground:rectArray count:rectCount];
-    
-    if (_rowSpans.size() && _columnSpans.size()) {
-        [self drawCells:rectArray count:rectCount];
-        [self drawDividers:rectArray count:rectCount];
-    }
+- (BOOL)wantsUpdateLayer {
+    return YES;
 }
 
-- (void)drawBackground:(const NSRect *)rectArray count:(NSInteger)rectCount {
-    [self.backgroundColor set];
-    
-    NSRectFillList(rectArray, rectCount);
-}
-
-- (void)drawDividers:(const NSRect *)rectArray count:(NSInteger)rectCount {
-    [self.dividerColor set];
-    
-    for (NSUInteger i = 0; i < rectCount; i++) {
-        NSRect dirtyRect = rectArray[i];
-        
-        NSRange rowSpanRange, columnSpanRange;
-        if ([self getRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange inRect:dirtyRect]) {
-            
-            BOOL firstIndexIsARow = rowSpanRange.location % 2;
-            BOOL firstIndexIsAColumn = columnSpanRange.location % 2;
-            
-            for (NSUInteger i = (firstIndexIsARow) ? rowSpanRange.location + 1 : rowSpanRange.location;
-                 i <= NSMaxRange(rowSpanRange);
-                 i += 2) {
-                NSRectFill(NSMakeRect(NSMinX(dirtyRect), _rowSpans[i].start, NSWidth(dirtyRect), _rowSpans[i].length));
-            }
-            
-            for (NSUInteger i = (firstIndexIsAColumn) ? columnSpanRange.location + 1 : columnSpanRange.location;
-                 i <= NSMaxRange(columnSpanRange);
-                 i += 2) {
-                NSRectFill(NSMakeRect(_columnSpans[i].start, NSMinY(dirtyRect), _columnSpans[i].length, NSHeight(dirtyRect)));
-            }
-        }
-    }
-}
-- (void)drawCells:(const NSRect *)rectArray count:(NSInteger)rectCount {
-    LIGridCell *drawingCell = [self.cell copy];
-
-    drawingCell.objectValue = @(0.0f);
-    
-    for (NSUInteger i = 0; i < rectCount; i++) {
-        NSRect dirtyRect = rectArray[i];
-        
-        NSRange rowSpanRange, columnSpanRange;
-        if ([self getRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange inRect:dirtyRect]) {
-            
-            BOOL firstIndexIsARow = rowSpanRange.location % 2;
-            BOOL firstIndexIsAColumn = columnSpanRange.location % 2;
-            
-            for (NSUInteger r = (firstIndexIsARow) ? rowSpanRange.location : rowSpanRange.location + 1;
-                 r <= NSMaxRange(rowSpanRange);
-                 r += 2) {
-                
-                for (NSUInteger c = (firstIndexIsAColumn) ? columnSpanRange.location : columnSpanRange.location + 1;
-                     c <= NSMaxRange(columnSpanRange);
-                     c += 2) {
-                    
-                    NSRect cellFrame = NSMakeRect(_columnSpans[c].start, _rowSpans[r].start, _columnSpans[c].length, _rowSpans[r].length);
-                    
-                    [self drawCell:drawingCell withFrame:cellFrame];
-                }
-            }
-        }
-    }
-}
-
-- (void)drawCell:(LIGridCell *)cell withFrame:(NSRect)frame {
-    [cell drawWithFrame:frame inView:self];
+- (void)updateLayer {
+    self.layer.backgroundColor = self.backgroundColor.CGColor;
 }
 
 @end
+

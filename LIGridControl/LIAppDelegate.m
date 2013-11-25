@@ -31,17 +31,31 @@
 }
 
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex {
-    return 23;
+    return 21;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowDividerAtIndex:(NSUInteger)anIndex {
-    return 0.25;
+    return 1;
 }
 
 - (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnAtIndex:(NSUInteger)anIndex {
     return 72;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex {
-    return 0.25;
+    return 1;
+}
+
+- (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl {
+    return 1;
+}
+- (LIGridArea *)gridControl:(LIGridControl *)gridControl fixedAreaAtIndex:(NSUInteger)index {
+    return [LIGridArea areaWithRowRange:NSMakeRange(0, 10) columnRange:NSMakeRange(0, 1) representedObject:@"foo"];
+}
+
+- (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)coordinate {
+    return coordinate.representedObject;
+}
+- (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)coordinate {
+    
 }
 
 @end

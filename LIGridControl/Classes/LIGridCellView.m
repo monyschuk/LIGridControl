@@ -1,14 +1,39 @@
 //
-//  LIGridCell.m
+//  LIGridCellView.m
 //  LIGridControl
 //
 //  Created by Mark Onyschuk on 11/18/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import "LIGridCell.h"
+#import "LIGridCellView.h"
 
-@implementation LIGridCell{
+@implementation LIGridCellView
+
++ (Class)cellClass {
+    return [LIGridCell class];
+}
+
+- (BOOL)isVertical {
+    return [(LIGridCell *)self.cell isVertical];
+}
+- (void)setVertical:(BOOL)vertical {
+    [(LIGridCell *)self.cell setVertical:vertical];
+}
+
+- (LIGridCellViewVerticalAlignment)verticalAlignment {
+    return [(LIGridCell *)self.cell verticalAlignment];
+}
+- (void)setVerticalAlignment:(LIGridCellViewVerticalAlignment)verticalAlignment {
+    [(LIGridCell *)self.cell setVerticalAlignment:verticalAlignment];
+}
+
+@end
+
+@implementation LIGridCell {
+    NSSize      _cachedCellSize;
+    NSSize      _cachedInputSize;
+    
     NSRect      _fieldEditorOriginalFrame;
     LIGridCell *_fieldEditorPositioningCell;
     BOOL        _fieldEditorIsBeingPositioned;
@@ -38,9 +63,9 @@
     self.alignment          = NSRightTextAlignment;
     
     _vertical               = NO;
-    _verticalAlignment      = LIGridCellVerticalAlignment_Center;
+    _verticalAlignment      = LIGridCellViewVerticalAlignment_Center;
     
-    self.font               = [NSFont fontWithName:@"HelveticaNeue-Light" size:12];
+    self.font               = [NSFont fontWithName:@"Avenir-Light" size:12];
 }
 
 #pragma mark -
@@ -56,6 +81,48 @@
 }
 
 #pragma mark -
+#pragma mark Value
+
+- (void)setObjectValue:(id<NSCopying>)obj {
+    _cachedInputSize = NSZeroSize;
+    [super setObjectValue:obj];
+}
+- (void)setIntegerValue:(NSInteger)anInteger {
+    _cachedInputSize = NSZeroSize;
+    [super setIntegerValue:anInteger];
+}
+- (void)setFloatValue:(float)aFloat {
+    _cachedInputSize = NSZeroSize;
+    [super setFloatValue:aFloat];
+}
+- (void)setDoubleValue:(double)aDouble {
+    _cachedInputSize = NSZeroSize;
+    [super setDoubleValue:aDouble];
+}
+- (void)setStringValue:(NSString *)aString {
+    _cachedInputSize = NSZeroSize;
+    [super setStringValue:aString];
+}
+- (void)setAttributedStringValue:(NSAttributedString *)obj {
+    _cachedInputSize = NSZeroSize;
+    [super setAttributedStringValue:obj];
+}
+
+- (void)setFont:(NSFont *)fontObj {
+    _cachedInputSize = NSZeroSize;
+    [super setFont:fontObj];
+}
+
+- (void)setVerticalAlignment:(LIGridCellViewVerticalAlignment)verticalAlignment {
+    if (_verticalAlignment != verticalAlignment) {
+        _cachedInputSize = NSZeroSize;
+
+        _verticalAlignment = verticalAlignment;
+        [self.controlView setNeedsDisplay:YES];
+    }
+}
+
+#pragma mark -
 #pragma mark Layout
 
 - (NSSize)cellSize {
@@ -68,14 +135,23 @@
     
     return cellSize;
 }
+
+- (NSSize)originalCellSizeForBounds:(NSRect)aRect {
+    if (!NSEqualSizes(aRect.size, _cachedInputSize)) {
+        _cachedCellSize  = [super cellSizeForBounds:aRect];
+        _cachedInputSize = aRect.size;
+    }
+    return _cachedCellSize;
+}
+
 - (NSSize)cellSizeForBounds:(NSRect)aRect {
-    NSSize cellSize = [super cellSizeForBounds:aRect];
-    
-    cellSize.width  = ceilf(cellSize.width);
-    cellSize.height = ceilf(cellSize.height);
-    
-    cellSize.height += 2;
-    
+        NSSize cellSize = [self originalCellSizeForBounds:aRect];
+        
+        cellSize.width  = ceilf(cellSize.width);
+        cellSize.height = ceilf(cellSize.height);
+        
+        cellSize.height += 2;
+
     return cellSize;
 }
 
@@ -83,17 +159,17 @@
     NSRect textFrame;
     
     textFrame = aRect;
-    textFrame.size.height = MIN(aRect.size.height, [super cellSizeForBounds:aRect].height);
+    textFrame.size.height = MIN(aRect.size.height, [self originalCellSizeForBounds:aRect].height);
     
     switch (self.verticalAlignment) {
-        case LIGridCellVerticalAlignment_Top:
+        case LIGridCellViewVerticalAlignment_Top:
             break;
             
-        case LIGridCellVerticalAlignment_Center:
+        case LIGridCellViewVerticalAlignment_Center:
             textFrame.origin.y = floorf(NSMidY(aRect) - NSHeight(textFrame) / 2);
             break;
             
-        case LIGridCellVerticalAlignment_Bottom:
+        case LIGridCellViewVerticalAlignment_Bottom:
             textFrame.origin.y = NSMaxY(aRect) - NSHeight(textFrame);
             break;
     }
@@ -203,10 +279,10 @@
         [transform concat];
     }
     
-    [super drawWithFrame:[self textFrameWithFrame:cellFrame] inView:controlView];
+    NSRect textFrame = [self textFrameWithFrame:cellFrame];
+    [super drawWithFrame:textFrame inView:controlView];
     
     if (self.vertical) {
-        NSFrameRect([self textFrameWithFrame:cellFrame]);
         [NSGraphicsContext restoreGraphicsState];
     }
     

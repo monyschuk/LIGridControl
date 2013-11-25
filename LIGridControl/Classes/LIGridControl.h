@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+#import "LIGridArea.h"
 
 @class LIGridControl;
 @protocol LIGridControlDataSource <NSObject>
@@ -14,15 +14,21 @@
 - (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl;
 - (NSUInteger)gridControlNumberOfColumns:(LIGridControl *)gridControl;
 
-- (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex;
-- (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowDividerAtIndex:(NSUInteger)anIndex;
+- (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)index;
+- (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowDividerAtIndex:(NSUInteger)index;
 
-- (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnAtIndex:(NSUInteger)anIndex;
-- (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex;
+- (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnAtIndex:(NSUInteger)index;
+- (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)index;
+
+- (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl;
+- (LIGridArea *)gridControl:(LIGridControl *)gridControl fixedAreaAtIndex:(NSUInteger)index;
+
+- (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)coordinate;
+- (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)coordinate;
 
 @end
 
-@interface LIGridControl : NSControl
+@interface LIGridControl : NSView
 
 #pragma mark -
 #pragma mark Data Source
@@ -38,10 +44,16 @@
 @property(nonatomic, copy) NSColor *backgroundColor;
 
 #pragma mark -
+#pragma mark Layout
+
+- (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column;
+- (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange;
+
+#pragma mark -
 #pragma mark Drawing
 
-- (void)drawBackground:(const NSRect *)rectArray count:(NSInteger)rectCount;
-- (void)drawDividers:(const NSRect *)rectArray count:(NSInteger)rectCount;
-- (void)drawCells:(const NSRect *)rectArray count:(NSInteger)rectCount;
+- (void)removeAllSubviews;
+- (void)updateSubviewsInRect:(NSRect)dirtyRect;
 
 @end
+
