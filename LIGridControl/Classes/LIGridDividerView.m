@@ -48,10 +48,6 @@
     return YES;
 }
 
-- (BOOL)wantsDefaultClipping {
-    return NO;
-}
-
 - (BOOL)wantsUpdateLayer {
     return YES;
 }

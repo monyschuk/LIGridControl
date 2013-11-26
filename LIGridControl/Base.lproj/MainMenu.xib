@@ -662,7 +662,7 @@
                             <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <view fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FPe-IS-DPX" customClass="LIGridControl">
+                                <view canDrawConcurrently="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FPe-IS-DPX" customClass="LIGridControl">
                                     <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                 </view>
@@ -673,7 +673,7 @@
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="TQO-2p-zAY">
-                            <rect key="frame" x="464" y="0.0" width="16" height="360"/>
+                            <rect key="frame" x="465" y="0.0" width="15" height="360"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>

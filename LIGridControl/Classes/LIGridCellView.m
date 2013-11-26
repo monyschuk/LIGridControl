@@ -14,6 +14,16 @@
     return [LIGridCell class];
 }
 
+- (id)initWithFrame:(NSRect)frameRect {
+    if ((self = [super initWithFrame:frameRect])) {
+        [self setWantsLayer:YES];
+        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+        
+        [self.cell configureGridCell];
+    }
+    return self;
+}
+
 - (BOOL)isVertical {
     return [(LIGridCell *)self.cell isVertical];
 }
@@ -26,10 +36,6 @@
 }
 - (void)setVerticalAlignment:(LIGridCellViewVerticalAlignment)verticalAlignment {
     [(LIGridCell *)self.cell setVerticalAlignment:verticalAlignment];
-}
-
-- (BOOL)wantsDefaultClipping {
-    return NO;
 }
 
 @end
@@ -57,6 +63,7 @@
 
 - (void)configureGridCell {
     self.wraps              = YES;
+    
     self.bezeled            = NO;
     self.bordered           = NO;
     self.focusRingType      = NSFocusRingTypeNone;
@@ -69,7 +76,7 @@
     _vertical               = NO;
     _verticalAlignment      = LIGridCellViewVerticalAlignment_Center;
     
-    self.font               = [NSFont fontWithName:@"Avenir-Light" size:12];
+    self.font               = [NSFont fontWithName:@"Avenir-Light" size:11];
 }
 
 #pragma mark -
@@ -289,7 +296,6 @@
     if (self.vertical) {
         [NSGraphicsContext restoreGraphicsState];
     }
-    
 }
 
 - (NSColor *)highlightColorWithFrame:(NSRect)cellFrame inView:(NSView *)controlView {

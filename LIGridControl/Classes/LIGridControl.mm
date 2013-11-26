@@ -38,30 +38,38 @@
 #define IS_SPAN_CELL(x)     ((x%2)>0)
 #define IS_SPAN_DIVIDER(x)  ((x%2)==0)
 
-struct GridSpan {
-    GridSpan() : start(0), length(0) {}
-    GridSpan(CGFloat v) : start(v), length(0) {}
-    GridSpan(CGFloat s, CGFloat l) : start(s), length(l) {}
-    GridSpan(const GridSpan& other) : start(other.start), length(other.length) {}
+template <class T>
+class Interval {
+public:
+    T start, length;
+    
+    Interval() : start(0), length(0) {}
+    Interval(T val) : start(val), length(val) {}
+    Interval(T start, T length) : start(start), length(length) {}
+    
+    // intersection
+    bool intersects(const Interval& other) const {
+        T minA = start, maxA = start + length;
+        T minB = other.start, maxB = other.start + other.length;
+        
+        return !(minA > maxB || maxA < minB);
+    }
     
     // comparison
-    bool operator<(const GridSpan& other) const {
+    bool operator<(const Interval& other) const {
         if (start < other.start) return true;
         if (other.start < start) return false;
         
         return false;
     }
-    
-    // type conversion
-    operator NSRange() const { return NSMakeRange(start, length); }
-    GridSpan(const NSRange& range) : start(range.location), length(range.length) {}
-    
-    CGFloat start, length;
 };
 
-typedef std::vector<GridSpan> GridSpanList;
+typedef Interval<CGFloat>       GridSpan;
+typedef std::vector<GridSpan>   GridSpanList;
 
-// Searches an (ordered) GridSpanList for the span index containing value, using a non-recursive binary search.
+typedef Interval<NSUInteger>    GridSpanListRange;
+
+// Searches a GridSpanList for the span index containing value, using a non-recursive binary search.
 static NSUInteger IndexOfSpanWithLocation(const GridSpanList& list, CGFloat value, BOOL match_nearest = false) {
     size_t len = list.size();
     
@@ -81,6 +89,7 @@ static NSUInteger IndexOfSpanWithLocation(const GridSpanList& list, CGFloat valu
         
         while (imax >= imin) {
             NSInteger  imid = (imin + imax) / 2;
+            
             CGFloat    minv = list[imid].start;
             CGFloat    maxv = list[imid].start + list[imid].length;
             
@@ -99,24 +108,25 @@ static NSUInteger IndexOfSpanWithLocation(const GridSpanList& list, CGFloat valu
     return NSNotFound;
 }
 
-struct GridArea {
-    GridArea() : rowSpan(GridSpan()), columnSpan(GridSpan()) {}
-    GridArea(GridSpan rowSpan, GridSpan colSpan) : rowSpan(rowSpan), columnSpan(colSpan) {}
-    GridArea(const GridArea& other) : rowSpan(other.rowSpan), columnSpan(other.columnSpan) {}
+class GridArea {
+public:
+    GridSpanListRange rowRange, columnRange;
+
+    GridArea() : rowRange(GridSpanListRange()), columnRange(GridSpanListRange()) {}
+    GridArea(GridSpanListRange rowRange, GridSpanListRange colRange) : rowRange(rowRange), columnRange(colRange) {}
     
     // intersection
-    
     bool intersects(const GridArea& other) const {
-        return (NSIntersectionRange(rowSpan, other.rowSpan).length > 0 && NSIntersectionRange(columnSpan, other.columnSpan).length > 0);
+        return rowRange.intersects(other.rowRange) && columnRange.intersects(other.columnRange);
     }
     
     // comparsion
     bool operator<(const GridArea& other) const {
-        if (rowSpan < other.rowSpan) return true;
-        if (other.rowSpan < rowSpan) return false;
+        if (rowRange < other.rowRange) return true;
+        if (other.rowRange < rowRange) return false;
         
-        if (columnSpan < other.columnSpan) return true;
-        if (other.columnSpan < columnSpan) return false;
+        if (columnRange < other.columnRange) return true;
+        if (other.columnRange < columnRange) return false;
         
         return false;
     }
@@ -124,19 +134,17 @@ struct GridArea {
     // type (and space) conversion
     GridArea(const LIGridArea* coord) {
         // convert from grid space to span space...
-        rowSpan.start = coord.rowRange.location * 2 + 1; rowSpan.length = coord.rowRange.length * 2;
-        columnSpan.start = coord.columnRange.location * 2 + 1; columnSpan.length = coord.columnRange.length * 2;
+        rowRange.start = coord.rowRange.location * 2 + 1; rowRange.length = coord.rowRange.length * 2;
+        columnRange.start = coord.columnRange.location * 2 + 1; columnRange.length = coord.columnRange.length * 2;
     }
     
     operator LIGridArea*() const {
         // convert from span space to grid space...
-        NSRange rowRange = NSMakeRange((rowSpan.start - 1) / 2, rowSpan.length / 2);
-        NSRange columnRange = NSMakeRange((columnSpan.start - 1) / 2, columnSpan.length / 2);
+        NSRange rr = NSMakeRange((rowRange.start - 1) / 2, rowRange.length / 2);
+        NSRange cr = NSMakeRange((columnRange.start - 1) / 2, columnRange.length / 2);
 
-        return [LIGridArea areaWithRowRange:rowRange columnRange:columnRange representedObject:nil];
+        return [LIGridArea areaWithRowRange:rr columnRange:cr representedObject:nil];
     }
-    
-    GridSpan rowSpan, columnSpan;
 };
 
 typedef std::queue<__strong id> GridObjectQueue;
@@ -244,7 +252,7 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     }
     
     [self invalidateIntrinsicContentSize];
-    [self updateSubviewsInRect:self.visibleRect];
+    [self visibleRectDidChange:nil];
 }
 
 #pragma mark -
@@ -302,6 +310,7 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 - (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column {
     return RECTAT(row, column);
 }
+
 - (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
     return NSUnionRect(RECTAT(rowRange.location, columnRange.location), RECTAT(rowRange.location + rowRange.length, columnRange.location + columnRange.length));
 }
@@ -333,7 +342,13 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 }
 - (LIGridCellView *)createNewReusableCell {
     LIGridCellView *cellView = [[LIGridCellView alloc] initWithFrame:NSZeroRect];
+    cellView.delegate = (id)self;
     cellView.backgroundColor = self.backgroundColor;
+    
+    [cellView.cell setWraps:NO];
+    [cellView.cell setScrollable:YES];
+
+    
     return cellView;
 }
 - (void)enqueueReusableCell:(LIGridCellView *)cell {
@@ -361,6 +376,14 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 #pragma mark -
 #pragma mark Visibilty Management
 
+- (void)viewWillStartLiveResize {
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawNever];
+}
+
+- (void)viewDidEndLiveResize {
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+}
+
 - (void)viewWillMoveToSuperview:(NSView *)newSuperview {
     NSScrollView *scrollView = [self enclosingScrollView];
     if (scrollView) [self stopObservingScrollView:scrollView];
@@ -368,21 +391,19 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 - (void)viewDidMoveToSuperview {
     NSScrollView *scrollView = [self enclosingScrollView];
     if (scrollView) [self startObservingScrollView:scrollView];
-    
-    [self visibleRectDidChange:nil];
 }
 
 - (void)stopObservingScrollView:(NSScrollView *)scrollView {
     NSClipView *clipView = scrollView.contentView;
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    
+
     [notificationCenter removeObserver:self name:NSViewFrameDidChangeNotification object:clipView];
     [notificationCenter removeObserver:self name:NSViewBoundsDidChangeNotification object:clipView];
 }
 - (void)startObservingScrollView:(NSScrollView *)scrollView {
     NSClipView *clipView = scrollView.contentView;
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    
+
     [notificationCenter addObserver:self selector:@selector(visibleRectDidChange:) name:NSViewFrameDidChangeNotification object:clipView];
     [notificationCenter addObserver:self selector:@selector(visibleRectDidChange:) name:NSViewBoundsDidChangeNotification object:clipView];
 }
@@ -390,15 +411,9 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 - (void)visibleRectDidChange:(NSNotification *)notification {
     if (_rowSpans.size() == 0 || _columnSpans.size() == 0) {
         [self removeAllSubviews];
-    }
-    else {
+    } else {
         [self updateSubviewsInRect:[self visibleRect]];
     }
-}
-
-- (void)setFrameSize:(NSSize)newSize {
-    [super setFrameSize:newSize];
-    [self updateSubviewsInRect:[self visibleRect]];
 }
 
 - (void)removeAllSubviews {
@@ -407,30 +422,26 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     }
 }
 
-- (void)updateSubviewsInRect:(NSRect)dirtyRect {
+- (void)updateSubviewsInRect:(NSRect)visibleRect {
     NSRange rowSpanRange, columnSpanRange;
-    if ([self getRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange inRect:dirtyRect]) {
-        [self recycleSubviewsOutsideOfRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange];
+    if ([self getRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange inRect:visibleRect]) {
+        [self recycleSubviewsOutsideOfRect:visibleRect];
         [self updateSubviewsInsideOfRowSpanRange:rowSpanRange columnSpanRange:columnSpanRange];
     }
 }
 
-- (void)recycleSubviewsOutsideOfRowSpanRange:(const NSRange&)rowSpanRange columnSpanRange:(const NSRange&)columnSpanRange {
-    GridArea visibleArea(rowSpanRange, columnSpanRange);
-    
+- (void)recycleSubviewsOutsideOfRect:(NSRect)visibleRect {
     auto it = _visibleAreaMap.cbegin();
     while (it != _visibleAreaMap.cend()) {
-        const GridArea& area = it->first;
-        if (! area.intersects(visibleArea)) {
-            const id view = it->second;
-            
+        id view = it->second;
+        if (!NSIntersectsRect(visibleRect, [view frame])) {
             if ([view isKindOfClass:[LIGridCellView class]]) {
-                [self enqueueReusableCell:view];
+                    [self enqueueReusableCell:view];
+                    _visibleAreaMap.erase(it++);
             } else if ([view isKindOfClass:[LIGridDividerView class]]) {
                 [self enqueueReusableDivider:view];
+                _visibleAreaMap.erase(it++);
             }
-            
-            _visibleAreaMap.erase(it++);
         }
         else {
             ++it;
@@ -439,41 +450,70 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
 }
 
 - (void)updateSubviewsInsideOfRowSpanRange:(const NSRange&)rowSpanRange columnSpanRange:(const NSRange&)columnSpanRange {
-    NSUInteger nrows = _rowSpans.size();
-    NSUInteger ncols = _columnSpans.size();
+    NSUInteger nrows     = _rowSpans.size();
+    NSUInteger ncols     = _columnSpans.size();
     
-    for (NSUInteger i = rowSpanRange.location, maxRange = rowSpanRange.location+rowSpanRange.length;
-         i <= maxRange;
-         i++) {
-        if (IS_SPAN_DIVIDER(i)) {
-            GridArea dividerArea(_rowSpans[i], GridSpan(0, ncols));
-            GridAreaMap::iterator existing = _visibleAreaMap.find(dividerArea);
+    NSUInteger minRow    = IS_SPAN_CELL(rowSpanRange.location) ? rowSpanRange.location : rowSpanRange.location + 1;
+    NSUInteger maxRow    = rowSpanRange.location + rowSpanRange.length;
+    
+    NSUInteger minCol    = IS_SPAN_CELL(columnSpanRange.location) ? columnSpanRange.location : columnSpanRange.location + 1;
+    NSUInteger maxCol    = columnSpanRange.location + columnSpanRange.length;
+
+    NSUInteger minRowDiv = IS_SPAN_DIVIDER(rowSpanRange.location) ? rowSpanRange.location : rowSpanRange.location + 1;
+    NSUInteger maxRowDiv = rowSpanRange.location + rowSpanRange.length;
+    
+    NSUInteger minColDiv = IS_SPAN_DIVIDER(columnSpanRange.location) ? columnSpanRange.location : columnSpanRange.location + 1;
+    NSUInteger maxColDiv = columnSpanRange.location + columnSpanRange.length;
+
+    // update row dividers...
+    for (NSUInteger row = minRowDiv; row <= maxRowDiv; row += 2) {
+        GridArea dividerArea(GridSpanListRange(row, 1), GridSpanListRange(0, ncols));
+        GridAreaMap::iterator existing = _visibleAreaMap.find(dividerArea);
+        
+        if (existing == _visibleAreaMap.end()) {
+            LIGridDividerView *dividerView = [self dequeueReusableDivider];
             
-            if (existing == _visibleAreaMap.end()) {
-                LIGridDividerView *dividerView = [self dequeueReusableDivider];
-                
-                dividerView.frame = NSMakeRect(0, _rowSpans[i].start, _columnSpans[ncols-1].start + _columnSpans[ncols-1].length, _rowSpans[i].length);
-                if (dividerView.superview == nil) [self addSubview:dividerView];
-                
-                _visibleAreaMap[dividerArea] = dividerView;
-            }
+            dividerView.frame = NSMakeRect(0, _rowSpans[row].start, _columnSpans[ncols-1].start + _columnSpans[ncols-1].length, _rowSpans[row].length);
+            if (dividerView.superview == nil) [self addSubview:dividerView];
+            
+            _visibleAreaMap[dividerArea] = dividerView;
         }
     }
     
-    for (NSUInteger i = columnSpanRange.location, maxRange = columnSpanRange.location+columnSpanRange.length;
-         i <= maxRange;
-         i++) {
-        if (IS_SPAN_DIVIDER(i)) {
-            GridArea dividerArea(GridSpan(0, nrows), _columnSpans[i]);
-            GridAreaMap::iterator existing = _visibleAreaMap.find(dividerArea);
+    // update column dividers...
+    for (NSUInteger col = minColDiv; col <= maxColDiv; col += 2) {
+        GridArea dividerArea(GridSpanListRange(0, nrows), GridSpanListRange(col, 1));
+        GridAreaMap::iterator existing = _visibleAreaMap.find(dividerArea);
+        
+        if (existing == _visibleAreaMap.end()) {
+            LIGridDividerView *dividerView = [self dequeueReusableDivider];
+            
+            dividerView.frame = NSMakeRect(_columnSpans[col].start, 0, _columnSpans[col].length, _rowSpans[nrows-1].start + _rowSpans[nrows-1].length);
+            if (dividerView.superview == nil) [self addSubview:dividerView];
+            
+            _visibleAreaMap[dividerArea] = dividerView;
+        }
+    }
+    
+    // update cells...
+    for (NSUInteger row = minRow; row <= maxRow; row += 2) {
+        for (NSUInteger col = minCol; col <= maxCol; col += 2) {
+            GridArea cellArea(row, col);
+            GridAreaMap::iterator existing = _visibleAreaMap.find(cellArea);
             
             if (existing == _visibleAreaMap.end()) {
-                LIGridDividerView *dividerView = [self dequeueReusableDivider];
+                LIGridCellView  *cellView   = [self dequeueReusableCell];
+                LIGridArea      *updateArea = [LIGridArea areaWithRow:row/2 column:col/2 representedObject:nil];
                 
-                dividerView.frame = NSMakeRect(_columnSpans[i].start, 0, _columnSpans[i].length, _rowSpans[nrows-1].start + _rowSpans[nrows-1].length);
-                if (dividerView.superview == nil) [self addSubview:dividerView];
+                id objectValue = [self.dataSource gridControl:self objectValueForArea:updateArea];
                 
-                _visibleAreaMap[dividerArea] = dividerView;
+                [cellView setFrame:[self rectForRow:row/2 column:col/2]];
+                [cellView.cell setRepresentedObject:updateArea];
+                [cellView setObjectValue:objectValue];
+                
+                if (cellView.superview == nil) [self addSubview:cellView];
+                
+                _visibleAreaMap[cellArea] = cellView;
             }
         }
     }
@@ -489,16 +529,17 @@ typedef std::map<GridArea, __strong id> GridAreaMap;
     return YES;
 }
 
-- (BOOL)wantsDefaultClipping {
-    return NO;
+- (void)drawRect:(NSRect)dirtyRect {
+    [self drawBackground:dirtyRect];
 }
 
-- (BOOL)wantsUpdateLayer {
-    return YES;
-}
-
-- (void)updateLayer {
-    self.layer.backgroundColor = self.backgroundColor.CGColor;
+- (void)drawBackground:(NSRect)dirtyRect {
+    NSInteger rectCount;
+    const NSRect *rectList;
+    [self getRectsBeingDrawn:&rectList count:&rectCount];
+    
+    [self.backgroundColor set];
+    NSRectFillList(rectList, rectCount);
 }
 
 @end

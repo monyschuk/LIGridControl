@@ -23,6 +23,8 @@ typedef enum {
 
 @interface LIGridCell : NSTextFieldCell
 
+- (void)configureGridCell;
+
 #pragma mark -
 #pragma mark Layout
 

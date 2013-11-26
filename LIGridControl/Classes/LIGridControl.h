@@ -8,7 +8,7 @@
 
 #import "LIGridArea.h"
 
-@class LIGridControl;
+@class LIGridControl, LIGridCellView;
 @protocol LIGridControlDataSource <NSObject>
 
 - (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl;
@@ -23,12 +23,12 @@
 - (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl;
 - (LIGridArea *)gridControl:(LIGridControl *)gridControl fixedAreaAtIndex:(NSUInteger)index;
 
-- (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)coordinate;
-- (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)coordinate;
+- (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)area;
+- (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)area;
 
 @end
 
-@interface LIGridControl : NSView
+@interface LIGridControl : NSControl
 
 #pragma mark -
 #pragma mark Data Source
@@ -54,6 +54,7 @@
 
 - (void)removeAllSubviews;
 - (void)updateSubviewsInRect:(NSRect)dirtyRect;
+- (void)visibleRectDidChange:(NSNotification *)notification;
 
 @end
 
