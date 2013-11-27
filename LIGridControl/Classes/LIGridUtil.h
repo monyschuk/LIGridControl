@@ -14,6 +14,8 @@
 #include <vector>
 #include <algorithm>
 
+#import  "LIGridArea.h"
+
 #define IS_CELL_INDEX(index)     ((index % 2)  > 0)
 #define IS_DIVIDER_INDEX(index)  ((index % 2) == 0)
 
@@ -57,10 +59,8 @@ namespace LIGrid {
             }
         };
         
-        typedef Interval<CGFloat>               GridSpan;
-        typedef std::vector<Interval<CGFloat>>  GridSpanList;
-        
-        typedef Interval<NSUInteger>            GridSpanListRange;
+        typedef Interval<CGFloat>       GridSpan;
+        typedef std::vector<GridSpan>   GridSpanList;
         
         // Searches a GridSpanList for the span index containing value, using a non-recursive binary search.
         static NSUInteger IndexOfSpanWithLocation(const GridSpanList& list, CGFloat value, BOOL matchNearest = false) {
@@ -101,6 +101,8 @@ namespace LIGrid {
             return NSNotFound;
         }
         
+        typedef Interval<NSUInteger>    GridSpanListRange;
+
         // Fills GridSpanListRanges with row and column spans intersecting rect.
         static void GetGridSpanListRangesWithRect(GridSpanListRange& rowSpanRange, GridSpanListRange& columnSpanRange, const GridSpanList& rowList, const GridSpanList& columnList, NSRect rect) {
             CGFloat minRowValue = NSMinY(rect), maxRowValue = NSMaxY(rect);
