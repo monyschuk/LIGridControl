@@ -152,7 +152,13 @@ namespace LIGrid {
                 return false;
             }
             
-            // type (and space) conversion
+            
+            // NOTE: GridArea provides conversion operators allowing you to use them interchangeably with LIGridArea objects.
+            // The conversion also converts from cell space to grid space - that's to say that while LIGridArea expresses row
+            // and column ranges, GridArea expresses row and column span ranges and conversion between the two objects also
+            // converts these spaces.
+
+            
             GridArea(const LIGridArea* coord) {
                 // convert from grid space to span space...
                 rowSpanRange.start = coord.rowRange.location * 2 + 1; rowSpanRange.length = (coord.rowRange.length > 1) ? coord.rowRange.length * 2 - 1 : coord.rowRange.length;
