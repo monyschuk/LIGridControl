@@ -290,6 +290,13 @@ using namespace LIGrid::Util;
     
     LIGridArea *gridArea = nil;
     if ((gridArea = [self areaAtPoint:location])) {
+        
+        [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+            [context setAllowsImplicitAnimation:YES];
+            [self scrollRectToVisible:[self rectForArea:gridArea]];
+        } completionHandler:^{
+        }];
+
         NSMutableArray *selectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
         
         if ([selectedAreas containsObject:gridArea]) {
@@ -348,7 +355,8 @@ using namespace LIGrid::Util;
         
         NSRect frame   = [self rectForArea:area];
         NSText *editor = [editingCell setUpFieldEditorAttributes:[self.window fieldEditor:YES forObject:self]];
-        
+
+        [self scrollRectToVisible:frame];
         [editingCell selectWithFrame:frame inView:self editor:editor delegate:self start:0 length:_editingCell.stringValue.length];
     }
 }
