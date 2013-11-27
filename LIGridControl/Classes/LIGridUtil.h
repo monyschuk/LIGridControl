@@ -151,29 +151,42 @@ namespace LIGrid {
                 return false;
             }
             
-            
             // NOTE: GridArea provides conversion operators allowing you to use them interchangeably with LIGridArea objects.
             // The conversion also converts from cell space to grid space - that's to say that while LIGridArea expresses row
             // and column ranges, GridArea expresses row and column span ranges and conversion between the two objects also
             // converts these spaces.
 
+            static inline NSUInteger cellIndexToGridIndex(NSUInteger cellIndex) {
+                return (cellIndex * 2) + 1;
+            }
+            static inline NSUInteger gridIndexToCellIndex(NSUInteger gridIndex) {
+                return (gridIndex - 1) / 2;
+            }
+            
+            static inline GridSpanListRange cellRangeToGridRange(NSRange cellRange) {
+                NSUInteger min = cellRange.location, max = cellRange.location + cellRange.length - 1;
+                NSUInteger minGrid = cellIndexToGridIndex(min), maxGrid = cellIndexToGridIndex(max);
+                
+                return GridSpanListRange(minGrid, maxGrid - minGrid);
+            }
+            static inline NSRange gridRangeToCellRange(const GridSpanListRange& gridRange) {
+                NSUInteger minGrid = gridRange.start, maxGrid = gridRange.end();
+                NSUInteger min = gridIndexToCellIndex(minGrid), max = gridIndexToCellIndex(maxGrid);
+                
+                return NSMakeRange(min, (max - min) + 1);
+            }
             
             GridArea(const LIGridArea* coord) {
+                rowSpanRange = cellRangeToGridRange(coord.rowRange);
+                columnSpanRange = cellRangeToGridRange(coord.columnRange);
                 
-                // convert from grid space to span space...
-                rowSpanRange.start = coord.rowRange.location * 2 + 1;
-                rowSpanRange.length = (coord.rowRange.length > 1) ? coord.rowRange.length * 2 - 1 : coord.rowRange.length;
-                
-                columnSpanRange.start = coord.columnRange.location * 2 + 1;
-                columnSpanRange.length = (coord.columnRange.length > 1) ? coord.columnRange.length * 2 - 1 : coord.columnRange.length;
             }
             
             operator LIGridArea*() const {
-                // convert from span space to grid space...
-                NSRange rr = NSMakeRange(rowSpanRange.start / 2, (rowSpanRange.length > 1) ? (rowSpanRange.length + 1) / 2 : rowSpanRange.length);
-                NSRange cr = NSMakeRange(columnSpanRange.start / 2, (columnSpanRange.length > 1) ? (columnSpanRange.length + 1) / 2 : columnSpanRange.length);
+                NSRange rowRange = gridRangeToCellRange(rowSpanRange);
+                NSRange columnRange = gridRangeToCellRange(columnSpanRange);
                 
-                return [LIGridArea areaWithRowRange:rr columnRange:cr representedObject:nil];
+                return [LIGridArea areaWithRowRange:rowRange columnRange:columnRange representedObject:nil];
             }
         };
         

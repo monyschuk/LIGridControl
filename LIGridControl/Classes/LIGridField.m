@@ -67,6 +67,7 @@
     self.bezeled            = NO;
     self.bordered           = NO;
     self.focusRingType      = NSFocusRingTypeNone;
+    self.drawsBackground    = YES;
     
     self.editable           = YES;
     self.selectable         = YES;
@@ -177,13 +178,19 @@
             break;
             
         case LIGridFieldVerticalAlignment_Center:
-            textFrame.origin.y = floorf(NSMidY(aRect) - NSHeight(textFrame) / 2);
+            textFrame.origin.y = NSMidY(aRect) - NSHeight(textFrame) / 2;
             break;
             
         case LIGridFieldVerticalAlignment_Bottom:
             textFrame.origin.y = NSMaxY(aRect) - NSHeight(textFrame);
             break;
     }
+    
+    // ensure drawing, editing are performed on integral boundaries
+    // since when editing, the field editor appears to position itself
+    // in that way to avoid messy text rendering...
+    
+    textFrame = NSIntegralRectWithOptions(textFrame, NSAlignAllEdgesInward);
     
     return textFrame;
 }
@@ -197,7 +204,7 @@
              delegate:(id)anObject
                 event:(NSEvent *)theEvent {
     
-    [super editWithFrame:NSOffsetRect([self textFrameWithFrame:aRect], -1, 0)
+    [super editWithFrame:[self textFrameWithFrame:aRect]
                   inView:controlView
                   editor:textObj
                 delegate:anObject
@@ -213,7 +220,7 @@
                   start:(NSInteger)selStart
                  length:(NSInteger)selLength {
     
-    [super selectWithFrame:NSOffsetRect([self textFrameWithFrame:aRect], -1, 0)
+    [super selectWithFrame:[self textFrameWithFrame:aRect]
                     inView:controlView
                     editor:textObj
                   delegate:anObject

@@ -53,7 +53,7 @@
     return 72;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex {
-    return (anIndex % 4) ? 0.5 : 2;
+    return (anIndex % 4) ? 0.5 : 4;
 }
 
 - (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl {

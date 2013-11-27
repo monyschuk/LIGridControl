@@ -57,7 +57,7 @@ using namespace LIGrid::Util;
 }
 
 @property(nonatomic, strong) LIGridArea *editingArea;
-@property(nonatomic, strong) LIGridFieldCell *editingCell;
+@property(nonatomic, strong) NSCell     *editingCell; // cell class may be replaced by the data source
 
 @end
 
@@ -245,22 +245,23 @@ using namespace LIGrid::Util;
 #pragma mark Editing
 
 - (void)editArea:(LIGridArea *)area {
-    LIGridFieldCell *editingCell = [self.cell copy];
+    NSCell *editingCell = [self.cell copy];
+    
+    // end existing editing, if any...
+    [self.window makeFirstResponder:self];
+    
+    [editingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:area]];
+    editingCell = [self.dataSource gridControl:self willDrawCell:(id)editingCell forArea:area];
     
     if (editingCell.isEditable || editingCell.isSelectable) {
-        // end existing editing, if any...
-        [self.window makeFirstResponder:self];
         
-        [editingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:area]];
-
         self.editingArea = area;
         self.editingCell = editingCell;
         
         
         NSRect frame   = [self rectForArea:area];
-        NSText *editor = [self.window fieldEditor:YES forObject:self];
+        NSText *editor = [editingCell setUpFieldEditorAttributes:[self.window fieldEditor:YES forObject:self]];
         
-        [editingCell setUpFieldEditorAttributes:editor];
         [editingCell selectWithFrame:frame inView:self editor:editor delegate:self start:0 length:_editingCell.stringValue.length];
     }
 }
@@ -329,14 +330,8 @@ using namespace LIGrid::Util;
 
 - (void)drawRect:(NSRect)dirtyRect {
     [self drawBackground:dirtyRect];
-
-    // NOTE: there's a subtle bug in multi-cell fixed grid area
-    // rendering where the cell is rendered overtop of its right
-    // divider. You can see it by reversing drawing order below
-    // so that cells are drawn after dividers, rather than before.
-    
-    [self drawCells:dirtyRect];
     [self drawDividers:dirtyRect];
+    [self drawCells:dirtyRect];
 }
 
 - (void)drawCells:(NSRect)dirtyRect {
