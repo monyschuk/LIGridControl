@@ -54,6 +54,10 @@ using namespace LIGrid::Util;
     GridAreaList _fixedAreaList;
     
     GridSpanList _rowSpans, _columnSpans;
+    
+    BOOL _delegateWillDrawCellForArea;
+    BOOL _delegateWillDrawCellForRowDivider;
+    BOOL _delegateWillDrawCellForColumnDivider;
 }
 
 @property(nonatomic, strong) LIGridArea *editingArea;
@@ -122,13 +126,41 @@ using namespace LIGrid::Util;
 
 
 #pragma mark -
-#pragma mark Data Source
+#pragma mark Delegate & Data Source
 
+- (void)setDelegate:(id<LIGridControlDelegate>)delegate {
+    if (_delegate != delegate) {
+        NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+ 
+        if ([_delegate respondsToSelector:@selector(controlTextDidBeginEditing:)])
+            [nc removeObserver:_delegate name:NSControlTextDidBeginEditingNotification object:self];
+        
+        if ([_delegate respondsToSelector:@selector(controlTextDidChange:)])
+            [nc removeObserver:_delegate name:NSControlTextDidChangeNotification object:self];
+        
+        if ([_delegate respondsToSelector:@selector(controlTextDidEndEditing:)])
+            [nc removeObserver:_delegate name:NSControlTextDidEndEditingNotification object:self];
+
+        _delegate = delegate;
+        
+        if ([_delegate respondsToSelector:@selector(controlTextDidBeginEditing:)])
+            [nc addObserver:_delegate selector:@selector(controlTextDidChange:) name:NSControlTextDidBeginEditingNotification object:self];
+        
+        if ([_delegate respondsToSelector:@selector(controlTextDidChange:)])
+            [nc addObserver:_delegate selector:@selector(controlTextDidChange:) name:NSControlTextDidChangeNotification object:self];
+        
+        if ([_delegate respondsToSelector:@selector(controlTextDidEndEditing:)])
+            [nc addObserver:_delegate selector:@selector(controlTextDidEndEditing:) name:NSControlTextDidEndEditingNotification object:self];
+
+        
+        _delegateWillDrawCellForArea = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forArea:)];
+        _delegateWillDrawCellForRowDivider = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forRowDividerAtIndex:)];
+        _delegateWillDrawCellForColumnDivider = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forColumnDividerAtIndex:)];
+    }
+}
 - (void)setDataSource:(id<LIGridControlDataSource>)dataSource {
     if (_dataSource != dataSource) {
         _dataSource = dataSource;
-        
-        [self reloadData];
     }
 }
 
@@ -216,7 +248,7 @@ using namespace LIGrid::Util;
 
 
 #pragma mark -
-#pragma mark Events
+#pragma mark Event Handling
 
 - (BOOL)becomeFirstResponder {
     return YES;
@@ -235,10 +267,24 @@ using namespace LIGrid::Util;
     if (gridArea) [self editArea:gridArea];
 }
 
+
+#pragma mark -
+#pragma mark Key Event Handling
+
 - (void)keyDown:(NSEvent *)theEvent {
     if (self.keyDownHandler == nil || self.keyDownHandler(theEvent) == NO) {
         [self interpretKeyEvents:@[theEvent]];
     }
+}
+
+- (void)insertTab:(id)sender {
+    
+}
+- (void)insertBacktab:(id)sender {
+    
+}
+- (void)insertNewline:(id)sender {
+    
 }
 
 #pragma mark -
@@ -251,13 +297,12 @@ using namespace LIGrid::Util;
     [self.window makeFirstResponder:self];
     
     [editingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:area]];
-    editingCell = [self.dataSource gridControl:self willDrawCell:(id)editingCell forArea:area];
+    editingCell = (_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:(id)editingCell forArea:area] : editingCell;
     
     if (editingCell.isEditable || editingCell.isSelectable) {
         
         self.editingArea = area;
         self.editingCell = editingCell;
-        
         
         NSRect frame   = [self rectForArea:area];
         NSText *editor = [editingCell setUpFieldEditorAttributes:[self.window fieldEditor:YES forObject:self]];
@@ -266,6 +311,99 @@ using namespace LIGrid::Util;
     }
 }
 
+- (void)updateGridArea:(LIGridArea *)anArea withStringValue:(NSString *)aString {
+    id objectValue = nil;
+    NSFormatter *formatter = _editingCell.formatter;
+    
+    if (formatter == nil || [formatter getObjectValue:&objectValue forString:aString errorDescription:NULL] == NO) {
+        objectValue = aString;
+    }
+    
+    [self.dataSource gridControl:self setObjectValue:objectValue forArea:self.editingArea];
+    [self setNeedsDisplayInRect:[self rectForArea:self.editingArea]];
+}
+
+- (BOOL)textShouldBeginEditing:(NSText *)textObject {
+    if ([self.delegate respondsToSelector:@selector(control:textShouldBeginEditing:)]) {
+        return [self.delegate control:self textShouldBeginEditing:textObject];
+    }
+    return YES;
+}
+- (BOOL)textShouldEndEditing:(NSText *)textObject {
+    if ([self.delegate respondsToSelector:@selector(control:textShouldEndEditing:)]) {
+        return [self.delegate control:self textShouldEndEditing:textObject];
+    }
+    return YES;
+}
+
+- (void)textDidBeginEditing:(NSNotification *)notification {
+    NSNotification *note = [NSNotification notificationWithName:NSControlTextDidBeginEditingNotification
+                                                         object:self
+                                                       userInfo:@{@"NSFieldEditor" : notification.object}];
+
+    [[NSNotificationCenter defaultCenter] postNotification:note];
+}
+
+- (void)textDidChange:(NSNotification *)notification {
+    NSNotification *note = [NSNotification notificationWithName:NSControlTextDidChangeNotification
+                                                         object:self
+                                                       userInfo:@{@"NSFieldEditor" : notification.object}];
+
+    [[NSNotificationCenter defaultCenter] postNotification:note];
+    
+    if (_editingCell.isContinuous) {
+        NSText      *textObj = notification.object;
+        NSString    *stringValue = textObj.string.copy;
+        
+        [self updateGridArea:self.editingArea withStringValue:stringValue];
+    }
+}
+
+- (void)textDidEndEditing:(NSNotification *)notification {
+    NSNotification *note = [NSNotification notificationWithName:NSControlTextDidChangeNotification
+                                                         object:self
+                                                       userInfo:@{@"NSFieldEditor"  : notification.object,
+                                                                  @"NSTextMovement" : notification.userInfo[@"NSTextMovement"]}];
+    
+    [[NSNotificationCenter defaultCenter] postNotification:note];
+    
+    NSText      *textObj = notification.object;
+    NSString    *stringValue = textObj.string.copy;
+    
+    [self updateGridArea:_editingArea withStringValue:stringValue];
+
+    self.editingArea    = nil;
+    self.editingCell    = nil;
+    
+    textObj.delegate    = nil;
+    textObj.string      = @"";
+    
+    [textObj.superview removeFromSuperview];
+    
+    [self.window makeFirstResponder:self];
+}
+
+- (BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)commandSelector {
+    if ([self.delegate respondsToSelector:@selector(control:textView:doCommandBySelector:)]
+        && [self.delegate control:self textView:textView doCommandBySelector:commandSelector]) {
+        return YES;
+    }
+    else if (   commandSelector  == @selector(insertTab:)
+             || commandSelector  == @selector(insertBacktab:)
+             || commandSelector  == @selector(insertNewline:)) {
+        [self.window makeFirstResponder:self];
+        
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        [self performSelector:commandSelector withObject:self];
+#pragma clang diagnostic pop
+        
+//        [self editGridArea:[self gridAreaAtRow:self.selectedRowIndexes.lastIndex column:self.selectedColumnIndexes.lastIndex]];
+        return YES;
+    }
+    
+    return NO;
+}
 
 #pragma mark -
 #pragma mark Layout
@@ -360,7 +498,7 @@ using namespace LIGrid::Util;
             
             if (!isFixed) {
                 [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:drawingArea]];
-                [[self.dataSource gridControl:self willDrawCell:drawingCell forArea:drawingArea] drawWithFrame:rect inView:nil];
+                [(_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:drawingArea] : drawingCell drawWithFrame:rect inView:nil];
             }
         }
     }
@@ -375,7 +513,7 @@ using namespace LIGrid::Util;
             NSRect rect = RectWithGridSpanListRanges(it->first.rowSpanRange, it->first.columnSpanRange, _rowSpans, _columnSpans);
             
             [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:fixedArea]];
-            [[self.dataSource gridControl:self willDrawCell:drawingCell forArea:fixedArea] drawWithFrame:rect inView:nil];
+            [(_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:fixedArea] : drawingCell drawWithFrame:rect inView:nil];
         }
     }
 }
@@ -391,7 +529,7 @@ using namespace LIGrid::Util;
         
         if (!NSIsEmptyRect(rect)) {
             dividerCell.dividerColor = self.dividerColor;
-            [[self.dataSource gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:r/2] drawWithFrame:rect inView:nil];
+            [(_delegateWillDrawCellForRowDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:r/2] : dividerCell drawWithFrame:rect inView:nil];
         }
     }
     for (NSUInteger c = IS_DIVIDER_INDEX(colSpanRange.start) ? colSpanRange.start : colSpanRange.start + 1, maxc = colSpanRange.end(); c <= maxc; c += 2) {
@@ -399,7 +537,7 @@ using namespace LIGrid::Util;
         
         if (!NSIsEmptyRect(rect)) {
             dividerCell.dividerColor = self.dividerColor;
-            [[self.dataSource gridControl:self willDrawCell:dividerCell forColumnDividerAtIndex:c/2] drawWithFrame:rect inView:nil];
+            [(_delegateWillDrawCellForColumnDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forColumnDividerAtIndex:c/2] : dividerCell drawWithFrame:rect inView:nil];
         }
     }
 }

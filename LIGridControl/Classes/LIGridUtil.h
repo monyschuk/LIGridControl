@@ -179,7 +179,6 @@ namespace LIGrid {
             GridArea(const LIGridArea* coord) {
                 rowSpanRange = cellRangeToGridRange(coord.rowRange);
                 columnSpanRange = cellRangeToGridRange(coord.columnRange);
-                
             }
             
             operator LIGridArea*() const {

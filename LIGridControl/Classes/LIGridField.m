@@ -77,7 +77,7 @@
     _vertical               = NO;
     _verticalAlignment      = LIGridFieldVerticalAlignment_Center;
     
-    self.font               = [NSFont fontWithName:@"HelveticaNeue-Light" size:11];
+    self.font               = [NSFont fontWithName:@"AvenirNext-Regular" size:11];
 }
 
 #pragma mark -

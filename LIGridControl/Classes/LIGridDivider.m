@@ -37,6 +37,7 @@
 
 - (id)initTextCell:(NSString *)stringValue {
     if ((self = [super initTextCell:stringValue])) {
+        _dividerColor = [NSColor gridColor];
         _dividerStyle = LIGridDividerStyle_Dashed|LIGridDividerStyle_Double;
     }
     return self;
@@ -48,8 +49,8 @@
 - (id)copyWithZone:(NSZone *)zone {
     LIGridDividerCell *copy = [super copyWithZone:zone];
 
-    copy->_dividerColor = [_dividerColor copyWithZone:zone];
     copy->_dividerStyle = _dividerStyle;
+    copy->_dividerColor = [_dividerColor copyWithZone:zone];
     
     return copy;
 }

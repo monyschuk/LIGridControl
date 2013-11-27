@@ -13,7 +13,7 @@
 #import "LIGridField.h"
 #import "LIGridDivider.h"
 
-@interface LIAppDelegate () <LIGridControlDataSource>
+@interface LIAppDelegate () <LIGridControlDataSource, LIGridControlDelegate>
 @property(nonatomic, weak) IBOutlet LIGridControl *gridControl;
 @property(nonatomic, strong) NSMutableDictionary  *gridValues;
 @end
@@ -22,7 +22,10 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     self.gridValues = @{}.mutableCopy;
+    [self.gridControl setDelegate:self];
     [self.gridControl setDataSource:self];
+    
+    [self.gridControl reloadData];
 }
 
 #pragma mark -
@@ -43,7 +46,7 @@
 }
 
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex {
-    return 21;
+    return [gridControl.cell cellSizeForBounds:NSMakeRect(0, 0, 1e6, 1e6)].height;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowDividerAtIndex:(NSUInteger)anIndex {
     return 0;
@@ -60,7 +63,7 @@
     return 1;
 }
 - (LIGridArea *)gridControl:(LIGridControl *)gridControl fixedAreaAtIndex:(NSUInteger)index {
-    return [LIGridArea areaWithRowRange:NSMakeRange(1, 10) columnRange:NSMakeRange(0, 1) representedObject:@"foo"];
+    return [LIGridArea areaWithRowRange:NSMakeRange(5, 5) columnRange:NSMakeRange(2, 2) representedObject:@"foo"];
 }
 
 - (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)coordinate {
@@ -71,6 +74,12 @@
 }
 
 - (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area {
+    BOOL wraps = (area.rowRange.length > 1);
+    
+    [cell setWraps:wraps];
+    [cell setScrollable:!wraps];
+    [cell setLineBreakMode:!wraps ? NSLineBreakByTruncatingTail : NSLineBreakByWordWrapping];
+
     if (area.representedObject) {
         [cell setBackgroundColor:[[NSColor redColor] blendedColorWithFraction:0.90 ofColor:[NSColor whiteColor]]];
     } else {

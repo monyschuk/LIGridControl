@@ -10,6 +10,16 @@
 
 @class LIGridControl, LIGridFieldCell, LIGridDividerCell;
 
+@protocol LIGridControlDelegate <NSControlTextEditingDelegate>
+
+@optional
+- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area;
+
+- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forRowDividerAtIndex:(NSUInteger)index;
+- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index;
+
+@end
+
 @protocol LIGridControlDataSource <NSObject>
 
 - (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl;
@@ -27,11 +37,6 @@
 - (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)area;
 - (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)area;
 
-- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area;
-
-- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forRowDividerAtIndex:(NSUInteger)index;
-- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index;
-
 @end
 
 typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
@@ -39,8 +44,9 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 @interface LIGridControl : NSControl
 
 #pragma mark -
-#pragma mark Data Source
+#pragma mark Data Source, Delegate
 
+@property(nonatomic, weak) id <LIGridControlDelegate> delegate;
 @property(nonatomic, weak) id <LIGridControlDataSource> dataSource;
 
 - (void)reloadData;
