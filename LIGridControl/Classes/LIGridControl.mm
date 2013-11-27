@@ -49,13 +49,19 @@ using namespace LIGrid::Util;
 //
 //
 
-
-@implementation LIGridControl {
-    GridSpanList _rowSpans, _columnSpans;
-    
+@interface LIGridControl() {
     GridAreaMap  _fixedAreaMap;
     GridAreaList _fixedAreaList;
+    
+    GridSpanList _rowSpans, _columnSpans;
 }
+
+@property(nonatomic, strong) LIGridArea *editingArea;
+@property(nonatomic, strong) LIGridFieldCell *editingCell;
+
+@end
+
+@implementation LIGridControl
 
 + (Class)cellClass {
     return [LIGridFieldCell class];
@@ -199,6 +205,7 @@ using namespace LIGrid::Util;
         [self setNeedsDisplay:YES];
     }
 }
+
 - (void)setBackgroundColor:(NSColor *)backgroundColor {
     if (_backgroundColor != backgroundColor) {
         _backgroundColor = backgroundColor.copy;
@@ -225,7 +232,7 @@ using namespace LIGrid::Util;
     NSPoint location = [self convertPoint:theEvent.locationInWindow fromView:nil];
     
     LIGridArea *gridArea = [self areaAtPoint:location];
-    NSLog(@"gridArea = %@", gridArea);
+    if (gridArea) [self editArea:gridArea];
 }
 
 - (void)keyDown:(NSEvent *)theEvent {
@@ -238,7 +245,24 @@ using namespace LIGrid::Util;
 #pragma mark Editing
 
 - (void)editArea:(LIGridArea *)area {
+    LIGridFieldCell *editingCell = [self.cell copy];
     
+    if (editingCell.isEditable || editingCell.isSelectable) {
+        // end existing editing, if any...
+        [self.window makeFirstResponder:self];
+        
+        [editingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:area]];
+
+        self.editingArea = area;
+        self.editingCell = editingCell;
+        
+        
+        NSRect frame   = [self rectForArea:area];
+        NSText *editor = [self.window fieldEditor:YES forObject:self];
+        
+        [editingCell setUpFieldEditorAttributes:editor];
+        [editingCell selectWithFrame:frame inView:self editor:editor delegate:self start:0 length:_editingCell.stringValue.length];
+    }
 }
 
 
@@ -266,20 +290,8 @@ using namespace LIGrid::Util;
 }
 
 - (NSRect)rectForArea:(LIGridArea *)area {
-    return [self rectForRowRange:area.rowRange columnRange:area.columnRange];
-}
-
-- (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column {
-    GridSpanListRange rowSpanRange(row * 2 + 1, 1);
-    GridSpanListRange columnSpanRange(column * 2 + 1, 1);
-    
-    return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
-}
-- (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
-    GridSpanListRange rowSpanRange(rowRange.location * 2 + 1, rowRange.length * 2);
-    GridSpanListRange columnSpanRange(columnRange.location * 2 + 1, columnRange.length * 2);
-    
-    return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
+    GridArea gridArea = area;
+    return RectWithGridSpanListRanges(gridArea.rowSpanRange, gridArea.columnSpanRange, _rowSpans, _columnSpans);
 }
 
 - (LIGridArea *)areaAtPoint:(NSPoint)point {
@@ -298,11 +310,9 @@ using namespace LIGrid::Util;
                     return area;
                 }
             }
-            
             return hitArea;
         }
     }
-    
     return nil;
 }
 
@@ -370,7 +380,7 @@ using namespace LIGrid::Util;
             NSRect rect = RectWithGridSpanListRanges(it->first.rowSpanRange, it->first.columnSpanRange, _rowSpans, _columnSpans);
             
             [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:fixedArea]];
-            [[self.dataSource gridControl:self willDrawCell:drawingCell forArea:drawingArea] drawWithFrame:rect inView:nil];
+            [[self.dataSource gridControl:self willDrawCell:drawingCell forArea:fixedArea] drawWithFrame:rect inView:nil];
         }
     }
 }

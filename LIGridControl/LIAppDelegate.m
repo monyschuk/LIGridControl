@@ -71,7 +71,11 @@
 }
 
 - (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area {
-    [cell setBackgroundColor:[NSColor controlAlternatingRowBackgroundColors][area.row % 2]];
+    if (area.representedObject) {
+        [cell setBackgroundColor:[[NSColor redColor] blendedColorWithFraction:0.90 ofColor:[NSColor whiteColor]]];
+    } else {
+        [cell setBackgroundColor:[NSColor controlAlternatingRowBackgroundColors][area.row % 2]];
+    }
     return cell;
 }
 

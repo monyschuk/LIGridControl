@@ -70,8 +70,6 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 - (NSRect)rectForColumnDivider:(NSUInteger)column;
 
 - (NSRect)rectForArea:(LIGridArea *)area;
-- (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column;
-- (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange;
 
 #pragma mark -
 #pragma mark Drawing

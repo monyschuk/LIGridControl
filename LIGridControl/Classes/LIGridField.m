@@ -76,7 +76,7 @@
     _vertical               = NO;
     _verticalAlignment      = LIGridFieldVerticalAlignment_Center;
     
-    self.font               = [NSFont fontWithName:@"AvenirNext-Regular" size:10];
+    self.font               = [NSFont fontWithName:@"HelveticaNeue-Light" size:11];
 }
 
 #pragma mark -
@@ -197,7 +197,7 @@
              delegate:(id)anObject
                 event:(NSEvent *)theEvent {
     
-    [super editWithFrame:[self textFrameWithFrame:aRect]
+    [super editWithFrame:NSOffsetRect([self textFrameWithFrame:aRect], -1, 0)
                   inView:controlView
                   editor:textObj
                 delegate:anObject
@@ -213,7 +213,7 @@
                   start:(NSInteger)selStart
                  length:(NSInteger)selLength {
     
-    [super selectWithFrame:[self textFrameWithFrame:aRect]
+    [super selectWithFrame:NSOffsetRect([self textFrameWithFrame:aRect], -1, 0)
                     inView:controlView
                     editor:textObj
                   delegate:anObject
