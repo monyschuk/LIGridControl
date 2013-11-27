@@ -53,7 +53,7 @@
     return 72;
 }
 - (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex {
-    return (anIndex % 4) ? 0.5 : 4;
+    return (anIndex % 4) ? 0.5 : 2;
 }
 
 - (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl {
@@ -83,7 +83,7 @@
     return cell;
 }
 - (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index {
-    cell.dividerColor = (index % 2) ? [NSColor gridColor] : [NSColor blackColor];
+    cell.dividerColor = [NSColor blackColor];
     return cell;
 }
 
