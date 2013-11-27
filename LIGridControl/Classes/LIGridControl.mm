@@ -94,6 +94,9 @@ using namespace LIGrid::Util;
     _dividerColor       = DF_DIVIDER_COLOR;
     _backgroundColor    = DF_BACKGROUND_COLOR;
     
+    _showsSelection     = YES;
+    _selectedAreas      = @[];
+    
     self.cell = [[LIGridFieldCell alloc] initTextCell:@""];
 
     
@@ -108,9 +111,11 @@ using namespace LIGrid::Util;
             NSMutableCharacterSet *editChars = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
             [editChars formUnionWithCharacterSet:[NSCharacterSet punctuationCharacterSet]];
             
-            if (weakSelf.selectedArea != nil) {
+            NSArray *selectedAreas = weakSelf.selectedAreas;
+            
+            if (selectedAreas.count == 1) {
                 if ([[keyEvent characters] rangeOfCharacterFromSet:editChars].location != NSNotFound) {
-                    [weakSelf editArea:weakSelf.selectedArea];
+                    [weakSelf editArea:selectedAreas.lastObject];
                     [weakSelf.currentEditor insertText:keyEvent.characters];
                     
                     return YES;
@@ -246,6 +251,26 @@ using namespace LIGrid::Util;
     }
 }
 
+#pragma mark -
+#pragma mark Selection
+
+- (void)setShowsSelection:(BOOL)showsSelection {
+    if (_showsSelection != showsSelection) {
+        _showsSelection = showsSelection;
+        
+        if (self.selectedAreas.count) {
+            [self setNeedsDisplay:YES];
+        }
+    }
+}
+
+- (void)setSelectedAreas:(NSArray *)selectedAreas {
+    if (_selectedAreas != selectedAreas) {
+        _selectedAreas = [selectedAreas copy];
+        
+        [self setNeedsDisplay:YES];
+    }
+}
 
 #pragma mark -
 #pragma mark Event Handling
@@ -263,8 +288,24 @@ using namespace LIGrid::Util;
 - (void)mouseDown:(NSEvent *)theEvent {
     NSPoint location = [self convertPoint:theEvent.locationInWindow fromView:nil];
     
-    LIGridArea *gridArea = [self areaAtPoint:location];
-    if (gridArea) [self editArea:gridArea];
+    LIGridArea *gridArea = nil;
+    if ((gridArea = [self areaAtPoint:location])) {
+        NSMutableArray *selectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+        
+        if ([selectedAreas containsObject:gridArea]) {
+            [self editArea:gridArea];
+            
+        } else {
+            if (theEvent.modifierFlags & NSShiftKeyMask) {
+                [selectedAreas addObject:gridArea];
+                
+            } else {
+                [selectedAreas setArray:@[gridArea]];
+            }
+            
+            self.selectedAreas = selectedAreas;
+        }
+    }
 }
 
 
@@ -300,7 +341,8 @@ using namespace LIGrid::Util;
     editingCell = (_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:(id)editingCell forArea:area] : editingCell;
     
     if (editingCell.isEditable || editingCell.isSelectable) {
-        
+        [self setSelectedAreas:@[area]];
+
         self.editingArea = area;
         self.editingCell = editingCell;
         
@@ -497,8 +539,24 @@ using namespace LIGrid::Util;
             }
             
             if (!isFixed) {
+                
+                if (_showsSelection) {
+                    BOOL isSelected = NO;
+                    for (LIGridArea *selectedArea in self.selectedAreas) {
+                        GridArea selectedGridArea = selectedArea;
+                        if (area.intersects(selectedGridArea)) {
+                            isSelected = YES;
+                            break;
+                        }
+                    }
+                    [drawingCell setHighlighted:isSelected && ![drawingArea isEqual:self.editingArea]];
+                }
                 [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:drawingArea]];
-                [(_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:drawingArea] : drawingCell drawWithFrame:rect inView:nil];
+                
+                id effectiveCell = ((_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:drawingArea] : drawingCell);
+                
+                [effectiveCell drawWithFrame:rect inView:self];
+                [effectiveCell setControlView:nil];
             }
         }
     }
@@ -512,8 +570,23 @@ using namespace LIGrid::Util;
             
             NSRect rect = RectWithGridSpanListRanges(it->first.rowSpanRange, it->first.columnSpanRange, _rowSpans, _columnSpans);
             
+            if (_showsSelection) {
+                BOOL isSelected = NO;
+                for (LIGridArea *selectedArea in self.selectedAreas) {
+                    GridArea selectedGridArea = selectedArea;
+                    if (it->first.intersects(selectedGridArea)) {
+                        isSelected = YES;
+                        break;
+                    }
+                }
+                [drawingCell setHighlighted:isSelected && ![fixedArea isEqual:self.editingArea]];
+            }
+            
             [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:fixedArea]];
-            [(_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:fixedArea] : drawingCell drawWithFrame:rect inView:nil];
+            
+            id effectiveCell = ((_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:fixedArea] : drawingCell);
+            [effectiveCell drawWithFrame:rect inView:self];
+            [effectiveCell setControlView:nil];
         }
     }
 }
@@ -529,7 +602,7 @@ using namespace LIGrid::Util;
         
         if (!NSIsEmptyRect(rect)) {
             dividerCell.dividerColor = self.dividerColor;
-            [(_delegateWillDrawCellForRowDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:r/2] : dividerCell drawWithFrame:rect inView:nil];
+            [((_delegateWillDrawCellForRowDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:r/2] : dividerCell) drawWithFrame:rect inView:nil];
         }
     }
     for (NSUInteger c = IS_DIVIDER_INDEX(colSpanRange.start) ? colSpanRange.start : colSpanRange.start + 1, maxc = colSpanRange.end(); c <= maxc; c += 2) {
@@ -537,7 +610,7 @@ using namespace LIGrid::Util;
         
         if (!NSIsEmptyRect(rect)) {
             dividerCell.dividerColor = self.dividerColor;
-            [(_delegateWillDrawCellForColumnDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forColumnDividerAtIndex:c/2] : dividerCell drawWithFrame:rect inView:nil];
+            [((_delegateWillDrawCellForColumnDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forColumnDividerAtIndex:c/2] : dividerCell) drawWithFrame:rect inView:nil];
         }
     }
 }

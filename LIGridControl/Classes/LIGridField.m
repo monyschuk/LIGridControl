@@ -282,7 +282,7 @@
         [self.backgroundColor set];
         NSRectFill(cellFrame);
     }
-    if (self.isHighlighted) {
+    if (self.isHighlighted && _fieldEditorPositioningCell == nil) {
         [[self highlightColorWithFrame:cellFrame inView:controlView] set];
         NSRectFill(cellFrame);
     }
@@ -313,6 +313,7 @@
     }
     else {
         return color;
+//        return [NSColor colorWithCalibratedRed:0.584 green:0.722 blue:0.955 alpha:1.000];
     }
 }
 

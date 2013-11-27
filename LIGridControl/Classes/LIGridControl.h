@@ -60,8 +60,8 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 #pragma mark -
 #pragma mark Selection
 
-@property(nonatomic, weak) LIGridArea *selectedArea;
-@property(nonatomic, copy) NSIndexSet *selectedRowIndexes, *selectedColumnIndexes;
+@property(nonatomic) BOOL showsSelection;
+@property(nonatomic, copy) NSArray *selectedAreas;
 
 #pragma mark -
 #pragma mark Editing
