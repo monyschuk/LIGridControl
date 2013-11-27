@@ -8,7 +8,8 @@
 
 #import "LIGridArea.h"
 
-@class LIGridControl, LIGridCellView;
+@class LIGridControl, LIGridFieldCell, LIGridDividerCell;
+
 @protocol LIGridControlDataSource <NSObject>
 
 - (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl;
@@ -26,7 +27,14 @@
 - (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)area;
 - (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)area;
 
+- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area;
+
+- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forRowDividerAtIndex:(NSUInteger)index;
+- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index;
+
 @end
+
+typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 
 @interface LIGridControl : NSControl
 
@@ -44,17 +52,38 @@
 @property(nonatomic, copy) NSColor *backgroundColor;
 
 #pragma mark -
+#pragma mark Selection
+
+@property(nonatomic, weak) LIGridArea *selectedArea;
+@property(nonatomic, copy) NSIndexSet *selectedRowIndexes, *selectedColumnIndexes;
+
+#pragma mark -
+#pragma mark Editing
+
+- (void)editArea:(LIGridArea *)area;
+@property(nonatomic, copy) LIGridControlKeyDownHandlerBlock keyDownHandler;
+
+#pragma mark -
 #pragma mark Layout
 
+- (NSRect)rectForRowDivider:(NSUInteger)row;
+- (NSRect)rectForColumnDivider:(NSUInteger)column;
+
+- (NSRect)rectForArea:(LIGridArea *)area;
 - (NSRect)rectForRow:(NSUInteger)row column:(NSUInteger)column;
 - (NSRect)rectForRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange;
 
 #pragma mark -
 #pragma mark Drawing
 
-- (void)removeAllSubviews;
-- (void)updateSubviewsInRect:(NSRect)dirtyRect;
-- (void)visibleRectDidChange:(NSNotification *)notification;
+- (void)drawCells:(NSRect)dirtyRect;
+- (void)drawDividers:(NSRect)dirtyRect;
+- (void)drawBackground:(NSRect)dirtyRect;
 
 @end
 
+@interface NSResponder (LIGridControlResponderMessages)
+
+- (void)insertFunction:(id)sender;
+
+@end

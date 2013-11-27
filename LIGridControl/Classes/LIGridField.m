@@ -1,17 +1,17 @@
 //
-//  LIGridCellView.m
+//  LIGridField.m
 //  LIGridControl
 //
 //  Created by Mark Onyschuk on 11/18/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import "LIGridCellView.h"
+#import "LIGridField.h"
 
-@implementation LIGridCellView
+@implementation LIGridField
 
 + (Class)cellClass {
-    return [LIGridCell class];
+    return [LIGridFieldCell class];
 }
 
 - (id)initWithFrame:(NSRect)frameRect {
@@ -25,27 +25,27 @@
 }
 
 - (BOOL)isVertical {
-    return [(LIGridCell *)self.cell isVertical];
+    return [(LIGridFieldCell *)self.cell isVertical];
 }
 - (void)setVertical:(BOOL)vertical {
-    [(LIGridCell *)self.cell setVertical:vertical];
+    [(LIGridFieldCell *)self.cell setVertical:vertical];
 }
 
-- (LIGridCellViewVerticalAlignment)verticalAlignment {
-    return [(LIGridCell *)self.cell verticalAlignment];
+- (LIGridFieldVerticalAlignment)verticalAlignment {
+    return [(LIGridFieldCell *)self.cell verticalAlignment];
 }
-- (void)setVerticalAlignment:(LIGridCellViewVerticalAlignment)verticalAlignment {
-    [(LIGridCell *)self.cell setVerticalAlignment:verticalAlignment];
+- (void)setVerticalAlignment:(LIGridFieldVerticalAlignment)verticalAlignment {
+    [(LIGridFieldCell *)self.cell setVerticalAlignment:verticalAlignment];
 }
 
 @end
 
-@implementation LIGridCell {
+@implementation LIGridFieldCell {
     NSSize      _cachedCellSize;
     NSSize      _cachedInputSize;
     
     NSRect      _fieldEditorOriginalFrame;
-    LIGridCell *_fieldEditorPositioningCell;
+    LIGridFieldCell *_fieldEditorPositioningCell;
     BOOL        _fieldEditorIsBeingPositioned;
 }
 
@@ -74,16 +74,16 @@
     self.alignment          = NSRightTextAlignment;
     
     _vertical               = NO;
-    _verticalAlignment      = LIGridCellViewVerticalAlignment_Center;
+    _verticalAlignment      = LIGridFieldVerticalAlignment_Center;
     
-    self.font               = [NSFont fontWithName:@"Avenir-Light" size:11];
+    self.font               = [NSFont fontWithName:@"AvenirNext-Regular" size:10];
 }
 
 #pragma mark -
 #pragma mark NSCopying
 
 - (id)copyWithZone:(NSZone *)zone {
-    LIGridCell *copy = [super copyWithZone:zone];
+    LIGridFieldCell *copy = [super copyWithZone:zone];
     
     copy->_vertical = _vertical;
     copy->_verticalAlignment = _verticalAlignment;
@@ -124,7 +124,7 @@
     [super setFont:fontObj];
 }
 
-- (void)setVerticalAlignment:(LIGridCellViewVerticalAlignment)verticalAlignment {
+- (void)setVerticalAlignment:(LIGridFieldVerticalAlignment)verticalAlignment {
     if (_verticalAlignment != verticalAlignment) {
         _cachedInputSize = NSZeroSize;
 
@@ -173,14 +173,14 @@
     textFrame.size.height = MIN(aRect.size.height, [self originalCellSizeForBounds:aRect].height);
     
     switch (self.verticalAlignment) {
-        case LIGridCellViewVerticalAlignment_Top:
+        case LIGridFieldVerticalAlignment_Top:
             break;
             
-        case LIGridCellViewVerticalAlignment_Center:
+        case LIGridFieldVerticalAlignment_Center:
             textFrame.origin.y = floorf(NSMidY(aRect) - NSHeight(textFrame) / 2);
             break;
             
-        case LIGridCellViewVerticalAlignment_Bottom:
+        case LIGridFieldVerticalAlignment_Bottom:
             textFrame.origin.y = NSMaxY(aRect) - NSHeight(textFrame);
             break;
     }

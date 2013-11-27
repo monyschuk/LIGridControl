@@ -8,13 +8,13 @@
 
 #import "LISpreadsheetControl.h"
 
-#import "LIGridCellView.h"
+#import "LIGridField.h"
 #import "LIGridControl.h"
 
 @implementation LISpreadsheetControl
 
 + (Class)cellClass {
-    return [LIGridCellView class];
+    return [LIGridField class];
 }
 
 - (id)initWithFrame:(NSRect)frameRect {
