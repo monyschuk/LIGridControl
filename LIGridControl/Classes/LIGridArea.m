@@ -88,4 +88,15 @@
     return other != nil && NSEqualRanges(_rowRange, other->_rowRange) && NSEqualRanges(_columnRange, other->_columnRange);
 }
 
+
+#pragma mark -
+#pragma mark Description
+
+- (NSString *)description {
+    id rr = (_rowRange.length == 1) ? @(_rowRange.location) : NSStringFromRange(_rowRange);
+    id cr = (_columnRange.length == 1) ? @(_columnRange.location) : NSStringFromRange(_columnRange);
+    
+    return [NSString stringWithFormat:@"(r: %@, c: %@): obj=%@", rr, cr, _representedObject];
+}
+
 @end

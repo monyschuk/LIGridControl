@@ -27,7 +27,7 @@ namespace LIGrid {
             T start, length;
             
             Interval() : start(0), length(0) {}
-            Interval(T val) : start(val), length(val) {}
+            Interval(T val) : start(val), length(0) {}
             Interval(T start, T length) : start(start), length(length) {}
             
             // end value
@@ -133,6 +133,7 @@ namespace LIGrid {
             GridSpanListRange rowSpanRange, columnSpanRange;
             
             GridArea() : rowSpanRange(GridSpanListRange()), columnSpanRange(GridSpanListRange()) {}
+            GridArea(NSUInteger r, NSUInteger c) : rowSpanRange(GridSpanListRange(r, 1)), columnSpanRange(GridSpanListRange(c, 1)) {}
             GridArea(GridSpanListRange rowRange, GridSpanListRange colRange) : rowSpanRange(rowRange), columnSpanRange(colRange) {}
             
             // intersection
@@ -154,14 +155,14 @@ namespace LIGrid {
             // type (and space) conversion
             GridArea(const LIGridArea* coord) {
                 // convert from grid space to span space...
-                rowSpanRange.start = coord.rowRange.location * 2 + 1; rowSpanRange.length = coord.rowRange.length * 2;
-                columnSpanRange.start = coord.columnRange.location * 2 + 1; columnSpanRange.length = coord.columnRange.length * 2;
+                rowSpanRange.start = coord.rowRange.location * 2 + 1; rowSpanRange.length = (coord.rowRange.length > 1) ? coord.rowRange.length * 2 - 1 : coord.rowRange.length;
+                columnSpanRange.start = coord.columnRange.location * 2 + 1; columnSpanRange.length = (coord.columnRange.length > 1) ? coord.columnRange.length * 2 - 1 : coord.columnRange.length;
             }
             
             operator LIGridArea*() const {
                 // convert from span space to grid space...
-                NSRange rr = NSMakeRange((rowSpanRange.start - 1) / 2, rowSpanRange.length / 2);
-                NSRange cr = NSMakeRange((columnSpanRange.start - 1) / 2, columnSpanRange.length / 2);
+                NSRange rr = NSMakeRange((rowSpanRange.start - 1) / 2, (rowSpanRange.length > 1) ? rowSpanRange.length / 2 : rowSpanRange.length);
+                NSRange cr = NSMakeRange((columnSpanRange.start - 1) / 2, (columnSpanRange.length > 1) ? columnSpanRange.length / 2 : columnSpanRange.length);
                 
                 return [LIGridArea areaWithRowRange:rr columnRange:cr representedObject:nil];
             }

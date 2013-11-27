@@ -222,7 +222,10 @@ using namespace LIGrid::Util;
 }
 
 - (void)mouseDown:(NSEvent *)theEvent {
+    NSPoint location = [self convertPoint:theEvent.locationInWindow fromView:nil];
     
+    LIGridArea *gridArea = [self areaAtPoint:location];
+    NSLog(@"gridArea = %@", gridArea);
 }
 
 - (void)keyDown:(NSEvent *)theEvent {
@@ -230,7 +233,6 @@ using namespace LIGrid::Util;
         [self interpretKeyEvents:@[theEvent]];
     }
 }
-
 
 #pragma mark -
 #pragma mark Editing
@@ -263,7 +265,6 @@ using namespace LIGrid::Util;
     return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
 }
 
-
 - (NSRect)rectForArea:(LIGridArea *)area {
     return [self rectForRowRange:area.rowRange columnRange:area.columnRange];
 }
@@ -281,6 +282,30 @@ using namespace LIGrid::Util;
     return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
 }
 
+- (LIGridArea *)areaAtPoint:(NSPoint)point {
+    NSUInteger rowIndex = IndexOfSpanWithLocation(_rowSpans, point.y);
+    NSUInteger colIndex = IndexOfSpanWithLocation(_columnSpans, point.x);
+    
+    if (rowIndex != NSNotFound && colIndex != NSNotFound) {
+        if (IS_CELL_INDEX(rowIndex) && IS_CELL_INDEX(colIndex)) {
+            GridArea hitArea(rowIndex, colIndex);
+            
+            for (auto it = _fixedAreaList.begin(); it != _fixedAreaList.end(); it++) {
+                if (hitArea.intersects(*it)) {
+                    LIGridArea *area = *it;
+                    area.representedObject = _fixedAreaMap.find(*it)->second;
+                    
+                    return area;
+                }
+            }
+            
+            return hitArea;
+        }
+    }
+    
+    return nil;
+}
+
 
 #pragma mark -
 #pragma mark Drawing
@@ -294,8 +319,14 @@ using namespace LIGrid::Util;
 
 - (void)drawRect:(NSRect)dirtyRect {
     [self drawBackground:dirtyRect];
-    [self drawDividers:dirtyRect];
+
+    // NOTE: there's a subtle bug in multi-cell fixed grid area
+    // rendering where the cell is rendered overtop of its right
+    // divider. You can see it by reversing drawing order below
+    // so that cells are drawn after dividers, rather than before.
+    
     [self drawCells:dirtyRect];
+    [self drawDividers:dirtyRect];
 }
 
 - (void)drawCells:(NSRect)dirtyRect {
