@@ -7,6 +7,7 @@
 //
 
 #import "LIGridArea.h"
+#import "LIGridControl.h"
 
 @implementation LIGridArea
 
@@ -59,7 +60,18 @@
 }
 
 #pragma mark -
+#pragma mark Union
+
+- (LIGridArea *)unionArea:(LIGridArea *)otherArea {
+    return [LIGridArea areaWithRowRange:NSUnionRange(_rowRange, otherArea.rowRange) columnRange:NSUnionRange(_columnRange, otherArea.columnRange) representedObject:nil];
+}
+
+#pragma mark -
 #pragma mark Intersection
+
+- (LIGridArea *)intersectionArea:(LIGridArea *)otherArea {
+    return [LIGridArea areaWithRowRange:NSIntersectionRange(_rowRange, otherArea.rowRange) columnRange:NSIntersectionRange(_columnRange, otherArea.columnRange) representedObject:nil];
+}
 
 - (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column {
     return NSLocationInRange(row, _rowRange) && NSLocationInRange(column, _columnRange);
@@ -96,7 +108,31 @@
     id rr = (_rowRange.length == 1) ? @(_rowRange.location) : NSStringFromRange(_rowRange);
     id cr = (_columnRange.length == 1) ? @(_columnRange.location) : NSStringFromRange(_columnRange);
     
-    return [NSString stringWithFormat:@"(r: %@, c: %@): obj=%@", rr, cr, _representedObject];
+    return [NSString stringWithFormat:@"(r: %@, c: %@): ro = %@", rr, cr, _representedObject];
+}
+
+@end
+
+
+@implementation LISelectionArea
+
+- (id)initWithPoint:(NSPoint)point control:(LIGridControl *)gridControl {
+    if ((self = [self initWithGridArea:[gridControl areaAtPoint:point] control:gridControl])) {
+        _point = point;
+    }
+    return self;
+}
+
+- (id)initWithGridArea:(LIGridArea *)gridArea control:(LIGridControl *)gridControl {
+    if ((self = [super initWithRowRange:gridArea.rowRange columnRange:gridArea.columnRange representedObject:nil])) {
+        _gridArea = gridArea;
+        _gridControl = gridControl;
+    }
+    return self;
+}
+
+- (LISelectionArea *)areaByAdvancingInDirection:(LIDirection)direction {
+    return self;
 }
 
 @end

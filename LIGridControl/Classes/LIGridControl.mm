@@ -60,8 +60,12 @@ using namespace LIGrid::Util;
     BOOL _delegateWillDrawCellForColumnDivider;
 }
 
+// properties used during editing
 @property(nonatomic, strong) LIGridArea *editingArea;
-@property(nonatomic, strong) NSCell     *editingCell; // cell class may be replaced by the data source
+@property(nonatomic, strong) NSCell     *editingCell;
+
+// properties used during extended selection
+@property(nonatomic, copy) LIGridArea   *selectionAnchor, *selectionExtension;
 
 @end
 
@@ -266,9 +270,13 @@ using namespace LIGrid::Util;
 
 - (void)setSelectedAreas:(NSArray *)selectedAreas {
     if (_selectedAreas != selectedAreas) {
+        // redraw old selection
+        for (LIGridArea *area in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:area]];
+
         _selectedAreas = [selectedAreas copy];
         
-        [self setNeedsDisplay:YES];
+        // draw new selection...
+        for (LIGridArea *area in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:area]];
     }
 }
 
@@ -291,11 +299,7 @@ using namespace LIGrid::Util;
     LIGridArea *gridArea = nil;
     if ((gridArea = [self areaAtPoint:location])) {
         
-        [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
-            [context setAllowsImplicitAnimation:YES];
-            [self scrollRectToVisible:[self rectForArea:gridArea]];
-        } completionHandler:^{
-        }];
+        [self scrollToArea:gridArea animate:YES];
 
         NSMutableArray *selectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
         
@@ -335,6 +339,100 @@ using namespace LIGrid::Util;
     
 }
 
+
+- (LIGridArea *)areaRelativeToArea:(LIGridArea *)oldArea rows:(NSInteger)rows columns:(NSInteger)columns {
+    NSInteger newRow = oldArea.row + rows;
+    NSInteger newCol = oldArea.column + columns;
+    
+    NSUInteger numRows  = (_rowSpans.size() / 2) - 1;
+    NSUInteger numCols  = (_columnSpans.size() / 2) - 1;
+    
+    if (newRow < 0) newRow = 0;
+    if (newRow > numRows - 1) newRow = numRows - 1;
+    
+    if (newCol < 0) newCol = 0;
+    if (newCol > numCols - 1) newCol = numCols - 1;
+    
+    return [self areaAtRow:newRow column:newCol];
+}
+
+- (void)moveInDirection:(LIDirection)direction extendSelection:(BOOL)extendSelection {
+    LIGridArea *currentArea  = self.selectedAreas.lastObject;
+    
+    if (currentArea != nil) {
+        if (self.selectionAnchor == nil) {
+            self.selectionAnchor = currentArea;
+            self.selectionExtension = currentArea;
+        }
+
+        NSInteger nextRow, nextCol;
+        LIGridArea *nextSelectedArea = nil;
+        
+        
+        switch (direction) {
+            case LIDirection_Up:
+                nextRow = self.selectionExtension.row - 1;
+                nextCol = self.selectionExtension.column;
+                
+                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:-1 columns:0];
+                break;
+            case LIDirection_Down:
+                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:1  columns:0];
+                break;
+            case LIDirection_Left:
+                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:0  columns:-1];
+                break;
+            case LIDirection_Right:
+                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:0  columns:1];
+                break;
+        }
+        
+        if (![nextSelectedArea isEqual:self.selectionExtension]) {
+            NSMutableArray *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+            
+            if (extendSelection) {
+                [newSelectedAreas removeLastObject];
+            } else {
+                [newSelectedAreas removeAllObjects];
+            }
+            
+            [newSelectedAreas addObject:nextSelectedArea];
+
+            self.selectedAreas = newSelectedAreas;
+            self.selectionExtension = nextSelectedArea;
+            
+            [self scrollToArea:nextSelectedArea animate:YES];
+        }
+    }
+}
+
+- (void)moveUp:(id)sender {
+    [self moveInDirection:LIDirection_Up extendSelection:NO];
+}
+- (void)moveDown:(id)sender {
+    [self moveInDirection:LIDirection_Down extendSelection:NO];
+}
+- (void)moveLeft:(id)sender {
+    [self moveInDirection:LIDirection_Left extendSelection:NO];
+}
+- (void)moveRight:(id)sender {
+    [self moveInDirection:LIDirection_Right extendSelection:NO];
+}
+
+- (void)moveUpAndModifySelection:(id)sender {
+    [self moveInDirection:LIDirection_Up extendSelection:YES];
+}
+- (void)moveDownAndModifySelection:(id)sender {
+    [self moveInDirection:LIDirection_Down extendSelection:YES];
+}
+- (void)moveLeftAndModifySelection:(id)sender {
+    [self moveInDirection:LIDirection_Left extendSelection:YES];
+}
+- (void)moveRightAndModifySelection:(id)sender {
+    [self moveInDirection:LIDirection_Right extendSelection:YES];
+}
+
+
 #pragma mark -
 #pragma mark Editing
 
@@ -348,22 +446,22 @@ using namespace LIGrid::Util;
     editingCell = (_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:(id)editingCell forArea:area] : editingCell;
     
     if (editingCell.isEditable || editingCell.isSelectable) {
-        [self setSelectedAreas:@[area]];
-
+        self.selectedAreas = @[area];
+        [self scrollToArea:area animate:NO];
+        
         self.editingArea = area;
         self.editingCell = editingCell;
         
         NSRect frame   = [self rectForArea:area];
         NSText *editor = [editingCell setUpFieldEditorAttributes:[self.window fieldEditor:YES forObject:self]];
 
-        [self scrollRectToVisible:frame];
         [editingCell selectWithFrame:frame inView:self editor:editor delegate:self start:0 length:_editingCell.stringValue.length];
     }
 }
 
 - (void)updateGridArea:(LIGridArea *)anArea withStringValue:(NSString *)aString {
     id objectValue = nil;
-    NSFormatter *formatter = _editingCell.formatter;
+    NSFormatter *formatter = self.editingCell.formatter;
     
     if (formatter == nil || [formatter getObjectValue:&objectValue forString:aString errorDescription:NULL] == NO) {
         objectValue = aString;
@@ -401,7 +499,7 @@ using namespace LIGrid::Util;
 
     [[NSNotificationCenter defaultCenter] postNotification:note];
     
-    if (_editingCell.isContinuous) {
+    if (self.editingCell.isContinuous) {
         NSText      *textObj = notification.object;
         NSString    *stringValue = textObj.string.copy;
         
@@ -420,7 +518,7 @@ using namespace LIGrid::Util;
     NSText      *textObj = notification.object;
     NSString    *stringValue = textObj.string.copy;
     
-    [self updateGridArea:_editingArea withStringValue:stringValue];
+    [self updateGridArea:self.editingArea withStringValue:stringValue];
 
     self.editingArea    = nil;
     self.editingCell    = nil;
@@ -441,6 +539,9 @@ using namespace LIGrid::Util;
     else if (   commandSelector  == @selector(insertTab:)
              || commandSelector  == @selector(insertBacktab:)
              || commandSelector  == @selector(insertNewline:)) {
+        
+        LIGridArea *previousArea = self.editingArea;
+        
         [self.window makeFirstResponder:self];
         
 #pragma clang diagnostic push
@@ -448,7 +549,12 @@ using namespace LIGrid::Util;
         [self performSelector:commandSelector withObject:self];
 #pragma clang diagnostic pop
         
-//        [self editGridArea:[self gridAreaAtRow:self.selectedRowIndexes.lastIndex column:self.selectedColumnIndexes.lastIndex]];
+        LIGridArea *nextArea = self.selectedAreas.lastObject;
+        
+        if (![nextArea isEqual:previousArea]) {
+            [self editArea:nextArea];
+        }
+        
         return YES;
     }
     
@@ -465,6 +571,11 @@ using namespace LIGrid::Util;
     return NSMakeSize(lastCol.end(), lastRow.end());
 }
 
+- (NSRect)rectForArea:(LIGridArea *)area {
+    GridArea gridArea = area;
+    return RectWithGridSpanListRanges(gridArea.rowSpanRange, gridArea.columnSpanRange, _rowSpans, _columnSpans);
+}
+
 - (NSRect)rectForRowDivider:(NSUInteger)row {
     GridSpanListRange rowSpanRange(row * 2, 1);
     GridSpanListRange columnSpanRange(0, _columnSpans.size());
@@ -476,11 +587,6 @@ using namespace LIGrid::Util;
     GridSpanListRange columnSpanRange(column * 2, 1);
     
     return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
-}
-
-- (NSRect)rectForArea:(LIGridArea *)area {
-    GridArea gridArea = area;
-    return RectWithGridSpanListRanges(gridArea.rowSpanRange, gridArea.columnSpanRange, _rowSpans, _columnSpans);
 }
 
 - (LIGridArea *)areaAtPoint:(NSPoint)point {
@@ -505,6 +611,39 @@ using namespace LIGrid::Util;
     return nil;
 }
 
+- (LIGridArea *)areaAtRow:(NSUInteger)row column:(NSUInteger)column {
+    LIGridArea *area = nil;
+    
+    for (auto it = _fixedAreaMap.begin(); it != _fixedAreaMap.end(); it++) {
+        LIGridArea *fixedArea = it->first;
+        fixedArea.representedObject = it->second;
+
+        if ([fixedArea containsRow:row column:column]) {
+            area = fixedArea;
+            break;
+        }
+    }
+    if (area == nil) {
+        area = [LIGridArea areaWithRow:row column:column representedObject:nil];
+    }
+    
+    return area;
+}
+
+#pragma mark -
+#pragma mark Animation
+
+- (void)scrollToArea:(LIGridArea *)area animate:(BOOL)shouldAnimate {
+    if (shouldAnimate) {
+        [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
+            [context setAllowsImplicitAnimation:YES];
+            [self scrollRectToVisible:[self rectForArea:area]];
+        } completionHandler:^{
+        }];
+    } else {
+        [self scrollRectToVisible:[self rectForArea:area]];
+    }
+}
 
 #pragma mark -
 #pragma mark Drawing
@@ -547,7 +686,6 @@ using namespace LIGrid::Util;
             }
             
             if (!isFixed) {
-                
                 if (_showsSelection) {
                     BOOL isSelected = NO;
                     for (LIGridArea *selectedArea in self.selectedAreas) {
