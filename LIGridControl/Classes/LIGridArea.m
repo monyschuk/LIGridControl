@@ -131,8 +131,21 @@
     return self;
 }
 
+- (id)copyWithZone:(NSZone *)zone {
+    LISelectionArea *copy = [super copyWithZone:zone];
+    
+    copy->_point = _point;
+    copy->_gridArea = _gridArea;
+    copy->_gridControl = _gridControl;
+
+    return copy;
+}
+
+- (LISelectionArea *)areaByUpdatingSecondPoint:(NSPoint)point {
+    return self.copy;
+}
 - (LISelectionArea *)areaByAdvancingInDirection:(LIDirection)direction {
-    return self;
+    return self.copy;
 }
 
 @end
