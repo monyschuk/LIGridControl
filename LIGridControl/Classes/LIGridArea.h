@@ -17,6 +17,8 @@
 
 @property(nonatomic) NSUInteger row, column;
 @property(nonatomic) NSRange rowRange, columnRange;
+
+@property(readonly, nonatomic) NSUInteger minRow, maxRow, minColumn, maxColumn;
 @property(readonly, nonatomic, weak) NSIndexSet *rowIndexes, *columnIndexes;
 
 @property(nonatomic, strong) id representedObject;
@@ -42,6 +44,15 @@
 
 @end
 
+// LISelectionArea represents a grid area that can be transformed into a new grid area
+// when it is extended in a given direction - up, down, left, or right. The object maintains
+// a reference to its associated grid, and uses that reference to search for spanning
+// cells when it is transformed.
+//
+// NOTE: the whole business of selection is straightforward for basic grids whose
+// cells all span single rows and column. Once spanning cells are introduced however,
+// then selection becomes more complicated. LISelectionArea encapsulates this complexity.
+
 typedef enum {
     LIDirection_Up,
     LIDirection_Down,
@@ -52,10 +63,8 @@ typedef enum {
 @class LIGridControl;
 @interface LISelectionArea : LIGridArea
 
-- (id)initWithPoint:(NSPoint)point control:(LIGridControl *)gridControl;
 - (id)initWithGridArea:(LIGridArea *)gridArea control:(LIGridControl *)gridControl;
 
-@property(readonly, nonatomic) NSPoint              point;
 @property(readonly, nonatomic, strong) LIGridArea   *gridArea;
 @property(readonly, nonatomic, weak) LIGridControl  *gridControl;
 

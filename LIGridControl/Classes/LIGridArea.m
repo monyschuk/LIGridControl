@@ -52,6 +52,19 @@
     _columnRange = NSMakeRange(column, 1);
 }
 
+- (NSUInteger)minRow {
+    return _rowRange.location;
+}
+- (NSUInteger)minColumn {
+    return _columnRange.location;
+}
+- (NSUInteger)maxRow {
+    return NSMaxRange(_rowRange);
+}
+- (NSUInteger)maxColumn {
+    return NSMaxRange(_columnRange);
+}
+
 - (NSIndexSet *)rowIndexes {
     return [[NSIndexSet alloc] initWithIndexesInRange:_rowRange];
 }
@@ -116,17 +129,10 @@
 
 @implementation LISelectionArea
 
-- (id)initWithPoint:(NSPoint)point control:(LIGridControl *)gridControl {
-    if ((self = [self initWithGridArea:[gridControl areaAtPoint:point] control:gridControl])) {
-        _point = point;
-    }
-    return self;
-}
-
 - (id)initWithGridArea:(LIGridArea *)gridArea control:(LIGridControl *)gridControl {
     if ((self = [super initWithRowRange:gridArea.rowRange columnRange:gridArea.columnRange representedObject:nil])) {
-        _gridArea = gridArea;
-        _gridControl = gridControl;
+        _gridArea       = gridArea;
+        _gridControl    = gridControl;
     }
     return self;
 }
@@ -134,18 +140,144 @@
 - (id)copyWithZone:(NSZone *)zone {
     LISelectionArea *copy = [super copyWithZone:zone];
     
-    copy->_point = _point;
-    copy->_gridArea = _gridArea;
-    copy->_gridControl = _gridControl;
-
+    copy->_gridArea     = _gridArea;
+    copy->_gridControl  = _gridControl;
+    
     return copy;
 }
 
-- (LISelectionArea *)areaByUpdatingSecondPoint:(NSPoint)point {
-    return self.copy;
+// the selection edge to adjust
+typedef enum {
+    LISelectionEdge_Top,                // adjust the selection top edge
+    LISelectionEdge_Left,               // etc...
+    LISelectionEdge_Right,
+    LISelectionEdge_Bottom
+} LISelectionEdge;
+
+- (BOOL)selectionExtendsUp {
+    return (self.minRow < self.gridArea.minRow);
 }
+- (BOOL)selectionExtendsDown {
+    return (self.maxRow > self.gridArea.maxRow);
+}
+- (BOOL)selectionExtendsLeft {
+    return (self.minColumn < self.gridArea.minColumn);
+}
+- (BOOL)selectionExtendsRight {
+    return (self.maxColumn > self.gridArea.maxColumn);
+}
+
+- (void)getSelectionEdge:(LISelectionEdge *)selectionEdgeP advancement:(NSInteger *)advancementP forAdvanceInDirection:(LIDirection)direction {
+    switch (direction) {
+        case LIDirection_Up:
+            *advancementP   = -1;
+            *selectionEdgeP = [self selectionExtendsDown] ? LISelectionEdge_Bottom : LISelectionEdge_Top;
+            break;
+            
+        case LIDirection_Down:
+            *advancementP   =  1;
+            *selectionEdgeP = [self selectionExtendsUp] ? LISelectionEdge_Top : LISelectionEdge_Bottom;
+            break;
+            
+        case LIDirection_Left:
+            *advancementP   = -1;
+            *selectionEdgeP = [self selectionExtendsRight] ? LISelectionEdge_Right : LISelectionEdge_Left;
+            break;
+
+        case LIDirection_Right:
+            *advancementP   =  1;
+            *selectionEdgeP = [self selectionExtendsLeft] ? LISelectionEdge_Left : LISelectionEdge_Right;
+            break;
+    }
+}
+
 - (LISelectionArea *)areaByAdvancingInDirection:(LIDirection)direction {
-    return self.copy;
+    LISelectionArea *copy = self.copy;
+
+    LISelectionEdge edge;
+    NSInteger       advancement;
+    
+    [self getSelectionEdge:&edge advancement:&advancement forAdvanceInDirection:direction];
+
+    // attempt to add, or subtract cells within our test area.
+    // if the test area contains spanning cells, then we expand
+    // the test area until it contains no further unaccounted spanners.
+    // we then add or subtract the resulting area and return this new area
+    
+    BOOL            add;
+    LIGridArea      *testArea;
+
+    if (advancement > 0) {
+        switch (edge) {
+            case LISelectionEdge_Top:
+                add = NO;
+                testArea = [LIGridArea areaWithRowRange:NSMakeRange(self.minRow, 1) columnRange:self.columnRange representedObject:nil];
+                break;
+                
+            case LISelectionEdge_Left:
+                add = NO;
+                testArea = [LIGridArea areaWithRowRange:self.rowRange columnRange:NSMakeRange(self.minColumn, 1) representedObject:nil];
+                break;
+                
+            case LISelectionEdge_Right:
+                add = YES;
+                testArea = [LIGridArea areaWithRowRange:self.rowRange columnRange:NSMakeRange(self.maxColumn, 1) representedObject:nil];
+                break;
+                
+            case LISelectionEdge_Bottom:
+                add = YES;
+                testArea = [LIGridArea areaWithRowRange:NSMakeRange(self.maxRow, 1) columnRange:self.columnRange representedObject:nil];
+                break;
+        }
+    } else {
+        switch (edge) {
+            case LISelectionEdge_Top:
+                add = YES;
+                testArea = [LIGridArea areaWithRowRange:NSMakeRange(self.minRow - 1, 1) columnRange:self.columnRange representedObject:nil];
+                break;
+                
+            case LISelectionEdge_Left:
+                add = YES;
+                testArea = [LIGridArea areaWithRowRange:self.rowRange columnRange:NSMakeRange(self.minColumn - 1, 1) representedObject:nil];
+                break;
+                
+            case LISelectionEdge_Right:
+                add = NO;
+                testArea = [LIGridArea areaWithRowRange:self.rowRange columnRange:NSMakeRange(self.maxColumn - 1, 1) representedObject:nil];
+                break;
+                
+            case LISelectionEdge_Bottom:
+                add = NO;
+                testArea = [LIGridArea areaWithRowRange:NSMakeRange(self.maxRow - 1, 1) columnRange:self.columnRange representedObject:nil];
+                break;
+        }
+    }
+
+    LIGridArea  *expandedArea = nil;
+    
+    while (! [testArea isEqual:expandedArea]) {
+        NSArray *enclosedFixedAreas = [self.gridControl fixedAreasInRowRange:testArea.rowRange columnRange:testArea.columnRange];
+
+        if (expandedArea == nil) {
+            expandedArea = testArea;
+        } else {
+            testArea     = expandedArea;
+        }
+        
+        for (LIGridArea *fixedArea in enclosedFixedAreas) {
+            expandedArea = [expandedArea unionArea:fixedArea];
+        }
+    }
+    
+    
+    if (add) {
+        copy.rowRange = NSUnionRange(copy.rowRange, expandedArea.rowRange);
+        copy.columnRange = NSUnionRange(copy.columnRange, expandedArea.columnRange);
+        
+    } else {
+        
+    }
+    return copy;
 }
 
 @end

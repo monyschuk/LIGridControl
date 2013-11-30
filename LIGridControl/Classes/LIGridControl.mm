@@ -64,9 +64,6 @@ using namespace LIGrid::Util;
 @property(nonatomic, strong) LIGridArea *editingArea;
 @property(nonatomic, strong) NSCell     *editingCell;
 
-// properties used during extended selection
-@property(nonatomic, copy) LIGridArea   *selectionAnchor, *selectionExtension;
-
 @end
 
 @implementation LIGridControl
@@ -301,17 +298,18 @@ using namespace LIGrid::Util;
         
         [self scrollToArea:gridArea animate:YES];
 
-        NSMutableArray *selectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+        NSMutableArray  *selectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+        LISelectionArea *selectionArea = [[LISelectionArea alloc] initWithGridArea:gridArea control:self];
         
-        if ([selectedAreas containsObject:gridArea]) {
-            [self editArea:gridArea];
+        if ([selectedAreas containsObject:selectionArea]) {
+            [self editArea:selectionArea.gridArea];
             
         } else {
             if (theEvent.modifierFlags & NSShiftKeyMask) {
-                [selectedAreas addObject:gridArea];
+                [selectedAreas addObject:selectionArea];
                 
             } else {
-                [selectedAreas setArray:@[gridArea]];
+                [selectedAreas setArray:@[selectionArea]];
             }
             
             self.selectedAreas = selectedAreas;
@@ -339,55 +337,13 @@ using namespace LIGrid::Util;
     
 }
 
-
-- (LIGridArea *)areaRelativeToArea:(LIGridArea *)oldArea rows:(NSInteger)rows columns:(NSInteger)columns {
-    NSInteger newRow = oldArea.row + rows;
-    NSInteger newCol = oldArea.column + columns;
-    
-    NSUInteger numRows  = (_rowSpans.size() / 2) - 1;
-    NSUInteger numCols  = (_columnSpans.size() / 2) - 1;
-    
-    if (newRow < 0) newRow = 0;
-    if (newRow > numRows - 1) newRow = numRows - 1;
-    
-    if (newCol < 0) newCol = 0;
-    if (newCol > numCols - 1) newCol = numCols - 1;
-    
-    return [self areaAtRow:newRow column:newCol];
-}
-
 - (void)moveInDirection:(LIDirection)direction extendSelection:(BOOL)extendSelection {
-    LIGridArea *currentArea  = self.selectedAreas.lastObject;
+    LISelectionArea *currentArea  = self.selectedAreas.lastObject;
     
     if (currentArea != nil) {
-        if (self.selectionAnchor == nil) {
-            self.selectionAnchor = currentArea;
-            self.selectionExtension = currentArea;
-        }
+        LISelectionArea *nextSelectedArea = [currentArea areaByAdvancingInDirection:direction];
 
-        NSInteger nextRow, nextCol;
-        LIGridArea *nextSelectedArea = nil;
-        
-        
-        switch (direction) {
-            case LIDirection_Up:
-                nextRow = self.selectionExtension.row - 1;
-                nextCol = self.selectionExtension.column;
-                
-                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:-1 columns:0];
-                break;
-            case LIDirection_Down:
-                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:1  columns:0];
-                break;
-            case LIDirection_Left:
-                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:0  columns:-1];
-                break;
-            case LIDirection_Right:
-                nextSelectedArea = [self areaRelativeToArea:self.selectionExtension rows:0  columns:1];
-                break;
-        }
-        
-        if (![nextSelectedArea isEqual:self.selectionExtension]) {
+        if (![nextSelectedArea isEqual:currentArea]) {
             NSMutableArray *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
             
             if (extendSelection) {
@@ -399,7 +355,6 @@ using namespace LIGrid::Util;
             [newSelectedAreas addObject:nextSelectedArea];
 
             self.selectedAreas = newSelectedAreas;
-            self.selectionExtension = nextSelectedArea;
             
             [self scrollToArea:nextSelectedArea animate:YES];
         }
@@ -628,6 +583,21 @@ using namespace LIGrid::Util;
     }
     
     return area;
+}
+
+- (NSArray *)fixedAreasInRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
+    NSMutableArray *fixedAreas = @[].mutableCopy;
+    GridArea area = [[LIGridArea alloc] initWithRowRange:rowRange columnRange:columnRange representedObject:nil];
+    
+    for (auto it = _fixedAreaMap.begin(); it != _fixedAreaMap.end(); it++) {
+        if (area.intersects(it->first)) {
+            LIGridArea *fixedArea = it->first;
+            fixedArea.representedObject = it->second;
+            
+            [fixedAreas addObject:fixedArea];
+        }
+    }
+    return fixedAreas;
 }
 
 #pragma mark -

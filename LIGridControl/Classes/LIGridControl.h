@@ -46,7 +46,7 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 #pragma mark -
 #pragma mark Data Source, Delegate
 
-@property(nonatomic, weak) id <LIGridControlDelegate> delegate;
+@property(nonatomic, weak) id <LIGridControlDelegate>   delegate;
 @property(nonatomic, weak) id <LIGridControlDataSource> dataSource;
 
 - (void)reloadData;
@@ -79,6 +79,8 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 
 - (LIGridArea *)areaAtPoint:(NSPoint)point;
 - (LIGridArea *)areaAtRow:(NSUInteger)row column:(NSUInteger)column;
+
+- (NSArray *)fixedAreasInRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange;
 
 #pragma mark -
 #pragma mark Animation
