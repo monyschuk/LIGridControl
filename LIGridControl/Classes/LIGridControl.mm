@@ -293,23 +293,23 @@ using namespace LIGrid::Util;
 - (void)mouseDown:(NSEvent *)theEvent {
     NSPoint location = [self convertPoint:theEvent.locationInWindow fromView:nil];
     
-    LIGridArea *gridArea = nil;
-    if ((gridArea = [self areaAtPoint:location])) {
+    NSUInteger row, col;
+    if ([self getRow:&row column:&col atPoint:location]) {
         
-        [self scrollToArea:gridArea animate:YES];
+        LISelectionArea *selection      = [[LISelectionArea alloc] initWithGridArea:[[LIGridArea alloc] initWithRow:row column:col representedObject:nil] control:self];
+        NSMutableArray  *selectedAreas  = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
 
-        NSMutableArray  *selectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
-        LISelectionArea *selectionArea = [[LISelectionArea alloc] initWithGridArea:gridArea control:self];
+        [self scrollToArea:selection.gridArea animate:YES];
         
-        if ([selectedAreas containsObject:selectionArea]) {
-            [self editArea:selectionArea.gridArea];
+        if ([selectedAreas containsObject:selection]) {
+            [self editArea:selection.gridArea];
             
         } else {
             if (theEvent.modifierFlags & NSShiftKeyMask) {
-                [selectedAreas addObject:selectionArea];
+                [selectedAreas addObject:selection];
                 
             } else {
-                [selectedAreas setArray:@[selectionArea]];
+                [selectedAreas setArray:@[selection]];
             }
             
             self.selectedAreas = selectedAreas;
@@ -341,23 +341,20 @@ using namespace LIGrid::Util;
     LISelectionArea *currentArea  = self.selectedAreas.lastObject;
     
     if (currentArea != nil) {
-        LISelectionArea *nextSelectedArea = [currentArea areaByAdvancingInDirection:direction];
-
-        if (![nextSelectedArea isEqual:currentArea]) {
-            NSMutableArray *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
-            
-            if (extendSelection) {
-                [newSelectedAreas removeLastObject];
-            } else {
-                [newSelectedAreas removeAllObjects];
-            }
-            
-            [newSelectedAreas addObject:nextSelectedArea];
-
-            self.selectedAreas = newSelectedAreas;
-            
-            [self scrollToArea:nextSelectedArea animate:YES];
+        LISelectionArea *nextSelectedArea = [currentArea areaByResizingInDirection:direction];
+        NSMutableArray  *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+        
+        if (extendSelection) {
+            [newSelectedAreas removeLastObject];
+        } else {
+            [newSelectedAreas removeAllObjects];
         }
+        
+        [newSelectedAreas addObject:nextSelectedArea];
+        
+        self.selectedAreas = newSelectedAreas;
+        
+        [self scrollToArea:nextSelectedArea animate:YES];
     }
 }
 
@@ -544,26 +541,14 @@ using namespace LIGrid::Util;
     return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
 }
 
-- (LIGridArea *)areaAtPoint:(NSPoint)point {
+- (BOOL)getRow:(NSUInteger *)rowP column:(NSUInteger *)colP atPoint:(NSPoint)point {
     NSUInteger rowIndex = IndexOfSpanWithLocation(_rowSpans, point.y);
     NSUInteger colIndex = IndexOfSpanWithLocation(_columnSpans, point.x);
     
-    if (rowIndex != NSNotFound && colIndex != NSNotFound) {
-        if (IS_CELL_INDEX(rowIndex) && IS_CELL_INDEX(colIndex)) {
-            GridArea hitArea(rowIndex, colIndex);
-            
-            for (auto it = _fixedAreaList.begin(); it != _fixedAreaList.end(); it++) {
-                if (hitArea.intersects(*it)) {
-                    LIGridArea *area = *it;
-                    area.representedObject = _fixedAreaMap.find(*it)->second;
-                    
-                    return area;
-                }
-            }
-            return hitArea;
-        }
-    }
-    return nil;
+    if (rowP) *rowP = (rowIndex != NSNotFound && IS_CELL_INDEX(rowIndex)) ? GRID_TO_CELL(rowIndex) : NSNotFound;
+    if (colP) *colP = (colIndex != NSNotFound && IS_CELL_INDEX(colIndex)) ? GRID_TO_CELL(colIndex) : NSNotFound;
+    
+    return ((rowP == NULL || *rowP != NSNotFound) && (colP == NULL || *colP != NSNotFound));
 }
 
 - (LIGridArea *)areaAtRow:(NSUInteger)row column:(NSUInteger)column {
@@ -572,14 +557,14 @@ using namespace LIGrid::Util;
     for (auto it = _fixedAreaMap.begin(); it != _fixedAreaMap.end(); it++) {
         LIGridArea *fixedArea = it->first;
         fixedArea.representedObject = it->second;
-
+        
         if ([fixedArea containsRow:row column:column]) {
             area = fixedArea;
             break;
         }
     }
     if (area == nil) {
-        area = [LIGridArea areaWithRow:row column:column representedObject:nil];
+        area = [[LIGridArea alloc] initWithRow:row column:column representedObject:nil];
     }
     
     return area;

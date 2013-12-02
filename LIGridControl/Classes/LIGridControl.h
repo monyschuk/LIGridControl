@@ -77,10 +77,10 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 - (NSRect)rectForRowDivider:(NSUInteger)row;
 - (NSRect)rectForColumnDivider:(NSUInteger)column;
 
-- (LIGridArea *)areaAtPoint:(NSPoint)point;
 - (LIGridArea *)areaAtRow:(NSUInteger)row column:(NSUInteger)column;
-
 - (NSArray *)fixedAreasInRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange;
+
+- (BOOL)getRow:(NSUInteger *)rowP column:(NSUInteger *)colP atPoint:(NSPoint)point;
 
 #pragma mark -
 #pragma mark Animation

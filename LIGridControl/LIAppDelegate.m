@@ -63,7 +63,7 @@
     return 1;
 }
 - (LIGridArea *)gridControl:(LIGridControl *)gridControl fixedAreaAtIndex:(NSUInteger)index {
-    return [LIGridArea areaWithRowRange:NSMakeRange(5, 5) columnRange:NSMakeRange(2, 2) representedObject:@"foo"];
+    return [[LIGridArea alloc] initWithRowRange:NSMakeRange(5, 5) columnRange:NSMakeRange(2, 2) representedObject:@"foo"];
 }
 
 - (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)coordinate {

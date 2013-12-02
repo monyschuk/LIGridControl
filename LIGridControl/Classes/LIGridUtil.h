@@ -16,6 +16,9 @@
 
 #import  "LIGridArea.h"
 
+#define GRID_TO_CELL(index)      ((index - 1) / 2)
+#define CELL_TO_GRID(index)      ((index * 2) + 1)
+
 #define IS_CELL_INDEX(index)     ((index % 2)  > 0)
 #define IS_DIVIDER_INDEX(index)  ((index % 2) == 0)
 
@@ -156,22 +159,15 @@ namespace LIGrid {
             // and column ranges, GridArea expresses row and column span ranges and conversion between the two objects also
             // converts these spaces.
 
-            static inline NSUInteger cellIndexToGridIndex(NSUInteger cellIndex) {
-                return (cellIndex * 2) + 1;
-            }
-            static inline NSUInteger gridIndexToCellIndex(NSUInteger gridIndex) {
-                return (gridIndex - 1) / 2;
-            }
-            
             static inline GridSpanListRange cellRangeToGridRange(NSRange cellRange) {
                 NSUInteger min = cellRange.location, max = cellRange.location + cellRange.length - 1;
-                NSUInteger minGrid = cellIndexToGridIndex(min), maxGrid = cellIndexToGridIndex(max);
+                NSUInteger minGrid = CELL_TO_GRID(min), maxGrid = CELL_TO_GRID(max);
                 
                 return GridSpanListRange(minGrid, maxGrid - minGrid);
             }
             static inline NSRange gridRangeToCellRange(const GridSpanListRange& gridRange) {
                 NSUInteger minGrid = gridRange.start, maxGrid = gridRange.end();
-                NSUInteger min = gridIndexToCellIndex(minGrid), max = gridIndexToCellIndex(maxGrid);
+                NSUInteger min = GRID_TO_CELL(minGrid), max = GRID_TO_CELL(maxGrid);
                 
                 return NSMakeRange(min, (max - min) + 1);
             }
@@ -185,7 +181,7 @@ namespace LIGrid {
                 NSRange rowRange = gridRangeToCellRange(rowSpanRange);
                 NSRange columnRange = gridRangeToCellRange(columnSpanRange);
                 
-                return [LIGridArea areaWithRowRange:rowRange columnRange:columnRange representedObject:nil];
+                return [[LIGridArea alloc] initWithRowRange:rowRange columnRange:columnRange representedObject:nil];
             }
         };
         
