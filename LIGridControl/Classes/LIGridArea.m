@@ -152,6 +152,35 @@
 #pragma mark -
 #pragma mark Area Movement
 
+- (LISelectionArea *)areaByMovingInDirection:(LIDirection)direction {
+    NSUInteger nextRow, nextCol;
+    switch (direction) {
+        case LIDirection_Up:
+            nextRow = (self.gridArea.row > 0) ? self.gridArea.row - 1 : self.gridArea.row;
+            nextCol = self.gridArea.column;
+            break;
+        case LIDirection_Down:
+            nextRow = self.gridArea.maxRow;
+            nextCol = self.gridArea.column;
+            break;
+        case LIDirection_Left:
+            nextCol = (self.gridArea.column > 0) ? self.gridArea.column - 1 : self.gridArea.column;
+            nextRow = self.gridArea.row;
+            break;
+        case LIDirection_Right:
+            nextCol = self.gridArea.maxColumn;
+            nextRow = self.gridArea.row;
+            break;
+    }
+    
+    NSUInteger numRows = self.gridControl.numberOfRows;
+    NSUInteger numCols = self.gridControl.numberOfColumns;
+    
+    if (nextRow >= numRows) nextRow = numRows - 1;
+    if (nextCol >= numCols) nextCol = numCols - 1;
+    
+    return [[LISelectionArea alloc] initWithGridArea:[self.gridControl areaAtRow:nextRow column:nextCol] control:self.gridControl];
+}
 
 #pragma mark -
 #pragma mark Area Extension
@@ -280,9 +309,20 @@ typedef enum {
     NSRange newColumnRange = self.columnRange;
     
     if (add) {
+        // adding is straightforward union
+        
         newRowRange = NSUnionRange(newRowRange, expandedArea.rowRange);
         newColumnRange = NSUnionRange(newColumnRange, expandedArea.columnRange);
+        
     } else {
+        // subtracting is a bit trickier:
+        
+        // We're always subtracting from an edge, so based on the
+        // edge we adjust our row or column ranges. In the event that
+        // subtraction gives us a range of zero size in any direction
+        // then based on the direction, we fix the range to length one
+        // at a new location.
+        
         switch (edge) {
             case LIAreaEdge_Top:
                 newRowRange.location += expandedArea.rowRange.length;
@@ -299,30 +339,38 @@ typedef enum {
                 newRowRange.length -= expandedArea.rowRange.length;
                 break;
         }
+        
+        if (newRowRange.length == 0) {
+            if (direction == LIDirection_Up) {
+                newRowRange.location -= 1;
+                newRowRange.length   += 1;
+            } else {
+                newRowRange.length   += 1;
+            }
+        }
+        if (newColumnRange.length == 0) {
+            if (direction == LIDirection_Right) {
+                newColumnRange.location -= 1;
+                newColumnRange.length   += 1;
+            } else {
+                newColumnRange.length   += 1;
+            }
+        }
     }
 
-    if (newRowRange.length == 0) {
-        if (direction == LIDirection_Up) {
-            newRowRange.location -= 1;
-            newRowRange.length   += 1;
-        } else {
-            newRowRange.length   += 1;
-        }
-    }
-    if (newColumnRange.length == 0) {
-        if (direction == LIDirection_Right) {
-            newColumnRange.location -= 1;
-            newColumnRange.length   += 1;
-        } else {
-            newColumnRange.length   += 1;
-        }
-    }
+    NSUInteger numRows = self.gridControl.numberOfRows;
+    NSUInteger numCols = self.gridControl.numberOfColumns;
     
     LISelectionArea *newArea = [[LISelectionArea alloc] initWithGridArea:self.gridArea control:self.gridControl];
     
-    newArea.rowRange = newRowRange;
-    newArea.columnRange = newColumnRange;
-
+    if (NSMaxRange(newRowRange) <= numRows && NSMaxRange(newColumnRange) <= numCols) {
+        newArea.rowRange = newRowRange;
+        newArea.columnRange = newColumnRange;
+    } else {
+        newArea.rowRange = self.rowRange;
+        newArea.columnRange = self.columnRange;
+    }
+    
     return newArea;
 }
 

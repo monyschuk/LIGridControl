@@ -346,11 +346,11 @@ using namespace LIGrid::Util;
         
         if (extendSelection) {
             [newSelectedAreas removeLastObject];
+            [newSelectedAreas addObject:[currentArea areaByResizingInDirection:direction]];
         } else {
             [newSelectedAreas removeAllObjects];
+            [newSelectedAreas addObject:[currentArea areaByMovingInDirection:direction]];
         }
-        
-        [newSelectedAreas addObject:nextSelectedArea];
         
         self.selectedAreas = newSelectedAreas;
         
@@ -515,6 +515,13 @@ using namespace LIGrid::Util;
 
 #pragma mark -
 #pragma mark Layout
+
+- (NSUInteger)numberOfRows {
+    return (_rowSpans.size() - 1) / 2;
+}
+- (NSUInteger)numberOfColumns {
+    return (_columnSpans.size() - 1) / 2;
+}
 
 - (NSSize)intrinsicContentSize {
     const GridSpan lastRow = _rowSpans.size() ? _rowSpans.back() : GridSpan();

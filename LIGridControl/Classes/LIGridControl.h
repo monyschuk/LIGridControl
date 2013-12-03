@@ -80,6 +80,8 @@ typedef BOOL (^LIGridControlKeyDownHandlerBlock)(NSEvent *keyEvent);
 - (LIGridArea *)areaAtRow:(NSUInteger)row column:(NSUInteger)column;
 - (NSArray *)fixedAreasInRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange;
 
+@property(nonatomic) NSUInteger numberOfRows, numberOfColumns;
+
 - (BOOL)getRow:(NSUInteger *)rowP column:(NSUInteger *)colP atPoint:(NSPoint)point;
 
 #pragma mark -
