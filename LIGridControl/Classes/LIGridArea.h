@@ -37,6 +37,7 @@
 #pragma mark -
 #pragma mark Intersection
 
+- (BOOL)intersectsArea:(LIGridArea *)otherArea;
 - (LIGridArea *)intersectionArea:(LIGridArea *)otherArea;
 
 - (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column;

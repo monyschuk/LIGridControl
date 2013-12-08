@@ -15,21 +15,6 @@
 #define DF_DIVIDER_COLOR    [NSColor gridColor]
 #define DF_BACKGROUND_COLOR [NSColor whiteColor]
 
-// LIGridControl allows users to specify row, column, row divider, and column divider sizing.
-// To do this, the class stores row and column size information as vectors of row and column spans.
-// These vectors of spans are organized in order. Row spans, for example, are organized like so:
-//
-//      [DIV 0][ROW 0], [DIV 1][ROW 1], ...[DIV N][ROW N][DIV N+1]
-//
-// That's to say, a grid with 100 rows stores 201 row spans. In general. A grid with N x M rows and columns
-// will store 2N+1 x 2M+1 spans.
-//
-// Note that if you're going to introduce a bug in display, an area ripe for confusion is this concept of grid
-// and span space. Make sure that you understand which space you're dealing with. Typically for the outside world
-// we express coordinates in grid space. the helper class LIGridArea expresses space in grid space. When working
-// internally, we typically work in span space. The helper C++ class GridArea expresses space in span space and
-// provides conversion operators that allow you to convert between the two representations.
-
 
 //
 //
@@ -38,10 +23,16 @@
 //
 
 
-#include "LIGridUtil.h"
+#include "grid.h"
 
-using namespace LIGrid::Util;
+using namespace li::grid;
 
+static inline area areaWithGridArea(const LIGridArea* gridArea) {
+    return area(range(gridArea.rowRange.location, gridArea.rowRange.length), range(gridArea.columnRange.location, gridArea.columnRange.length));
+}
+static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
+    return [[LIGridArea alloc] initWithRowRange:NSMakeRange(cellArea.rows.start, cellArea.rows.length) columnRange:NSMakeRange(cellArea.cols.start, cellArea.cols.length) representedObject:nil];
+}
 
 //
 //
@@ -50,10 +41,7 @@ using namespace LIGrid::Util;
 //
 
 @interface LIGridControl() {
-    GridAreaMap  _fixedAreaMap;
-    GridAreaList _fixedAreaList;
-    
-    GridSpanList _rowSpans, _columnSpans;
+    grid _grid;
     
     BOOL _delegateWillDrawCellForArea;
     BOOL _delegateWillDrawCellForRowDivider;
@@ -175,58 +163,33 @@ using namespace LIGrid::Util;
     NSUInteger columnCount = [self.dataSource gridControlNumberOfColumns:self];
     NSUInteger fixedAreaCount = [self.dataSource gridControlNumberOfFixedAreas:self];
 
-    _fixedAreaMap.clear();
-    _fixedAreaList.resize(fixedAreaCount);
-    
-    _rowSpans.resize(rowCount * 2 + 1);
-    _columnSpans.resize(columnCount * 2 + 1);
+    _grid.clear();
+    _grid.reserve_rows(rowCount);
+    _grid.reserve_cols(columnCount);
 
     // reload row spans...
 
     NSUInteger i;
-    CGFloat offset = 0;
-    
     for (i = 0; i < rowCount; i++) {
-        _rowSpans[2*i].start        = offset;
-        _rowSpans[2*i].length       = [self.dataSource gridControl:self heightOfRowDividerAtIndex:i];
-        
-        offset += _rowSpans[2*i].length;
-        
-        _rowSpans[2*i+1].start      = offset;
-        _rowSpans[2*i+1].length     = [self.dataSource gridControl:self heightOfRowAtIndex:i];
-        
-        offset += _rowSpans[2*i+1].length;
+        _grid.push_row_divider([self.dataSource gridControl:self heightOfRowDividerAtIndex:i]);
+        _grid.push_row([self.dataSource gridControl:self heightOfRowAtIndex:i]);
     }
-    
-    _rowSpans[2*i].start            = offset;
-    _rowSpans[2*i].length           = [self.dataSource gridControl:self heightOfRowDividerAtIndex:i];
+    _grid.push_row_divider([self.dataSource gridControl:self heightOfRowDividerAtIndex:i]);
     
     // reload column spans...
     
-    offset = 0;
-
     for (i = 0; i < columnCount; i++) {
-        _columnSpans[2*i].start     = offset;
-        _columnSpans[2*i].length    = [self.dataSource gridControl:self widthOfColumnDividerAtIndex:i];
-        
-        offset += _columnSpans[2*i].length;
-        
-        _columnSpans[2*i+1].start   = offset;
-        _columnSpans[2*i+1].length  = [self.dataSource gridControl:self widthOfColumnAtIndex:i];
-        
-        offset += _columnSpans[2*i+1].length;
+        _grid.push_col_divider([self.dataSource gridControl:self widthOfColumnDividerAtIndex:i]);
+        _grid.push_col([self.dataSource gridControl:self widthOfColumnAtIndex:i]);
     }
-    
-    _columnSpans[2*i].start         = offset;
-    _columnSpans[2*i].length        = [self.dataSource gridControl:self widthOfColumnDividerAtIndex:i];
+    _grid.push_col_divider([self.dataSource gridControl:self widthOfColumnDividerAtIndex:i]);
     
     // reload spanning areas...
     
     for (i = 0; i < fixedAreaCount; i++) {
-        LIGridArea *coord = [self.dataSource gridControl:self fixedAreaAtIndex:i];
-
-        _fixedAreaList[i] = coord;
-        _fixedAreaMap[coord] = coord.representedObject;
+        LIGridArea *gridArea = [self.dataSource gridControl:self fixedAreaAtIndex:i];
+        
+        _grid.push_fixed(areaWithGridArea(gridArea), gridArea.representedObject);
     }
     
     [self invalidateIntrinsicContentSize];
@@ -517,78 +480,70 @@ using namespace LIGrid::Util;
 #pragma mark Layout
 
 - (NSUInteger)numberOfRows {
-    return (_rowSpans.size() - 1) / 2;
+    return _grid.get_row_count();
 }
 - (NSUInteger)numberOfColumns {
-    return (_columnSpans.size() - 1) / 2;
+    return _grid.get_col_count();
 }
 
 - (NSSize)intrinsicContentSize {
-    const GridSpan lastRow = _rowSpans.size() ? _rowSpans.back() : GridSpan();
-    const GridSpan lastCol = _columnSpans.size() ? _columnSpans.back() : GridSpan();
-    
-    return NSMakeSize(lastCol.end(), lastRow.end());
+    return NSMakeSize(_grid.get_width(), _grid.get_height());
 }
 
 - (NSRect)rectForArea:(LIGridArea *)area {
-    GridArea gridArea = area;
-    return RectWithGridSpanListRanges(gridArea.rowSpanRange, gridArea.columnSpanRange, _rowSpans, _columnSpans);
+    return _grid.get_area_rect(areaWithGridArea(area));
 }
 
 - (NSRect)rectForRowDivider:(NSUInteger)row {
-    GridSpanListRange rowSpanRange(row * 2, 1);
-    GridSpanListRange columnSpanRange(0, _columnSpans.size());
-    
-    return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
+    return _grid.get_row_divider_rect(row);
 }
 - (NSRect)rectForColumnDivider:(NSUInteger)column {
-    GridSpanListRange rowSpanRange(0, _rowSpans.size());
-    GridSpanListRange columnSpanRange(column * 2, 1);
-    
-    return RectWithGridSpanListRanges(rowSpanRange, columnSpanRange, _rowSpans, _columnSpans);
+    return _grid.get_col_divider_rect(column);
 }
 
 - (BOOL)getRow:(NSUInteger *)rowP column:(NSUInteger *)colP atPoint:(NSPoint)point {
-    NSUInteger rowIndex = IndexOfSpanWithLocation(_rowSpans, point.y);
-    NSUInteger colIndex = IndexOfSpanWithLocation(_columnSpans, point.x);
+    NSUInteger rowIndex, colIndex;
     
-    if (rowP) *rowP = (rowIndex != NSNotFound && IS_CELL_INDEX(rowIndex)) ? GRID_TO_CELL(rowIndex) : NSNotFound;
-    if (colP) *colP = (colIndex != NSNotFound && IS_CELL_INDEX(colIndex)) ? GRID_TO_CELL(colIndex) : NSNotFound;
+    if (_grid.get_cell_coord(rowIndex, colIndex, point)) {
+        if (rowP) *rowP = rowIndex;
+        if (colP) *colP = colIndex;
+        
+        return YES;
+    }
     
-    return ((rowP == NULL || *rowP != NSNotFound) && (colP == NULL || *colP != NSNotFound));
+    return NO;
 }
 
 - (LIGridArea *)areaAtRow:(NSUInteger)row column:(NSUInteger)column {
-    LIGridArea *area = nil;
+    id   cell_obj;
+    area cell_area;
     
-    for (auto it = _fixedAreaMap.begin(); it != _fixedAreaMap.end(); it++) {
-        LIGridArea *fixedArea = it->first;
-        fixedArea.representedObject = it->second;
+    if (_grid.get_cell_area(cell_area, cell_obj, row, column)) {
+        LIGridArea *gridArea = gridAreaWithArea(cell_area);
+        gridArea.representedObject = cell_obj;
         
-        if ([fixedArea containsRow:row column:column]) {
-            area = fixedArea;
-            break;
-        }
-    }
-    if (area == nil) {
-        area = [[LIGridArea alloc] initWithRow:row column:column representedObject:nil];
+        return gridArea;
     }
     
-    return area;
+    return nil;
 }
 
 - (NSArray *)fixedAreasInRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
     NSMutableArray *fixedAreas = @[].mutableCopy;
-    GridArea area = [[LIGridArea alloc] initWithRowRange:rowRange columnRange:columnRange representedObject:nil];
-    
-    for (auto it = _fixedAreaMap.begin(); it != _fixedAreaMap.end(); it++) {
-        if (area.intersects(it->first)) {
-            LIGridArea *fixedArea = it->first;
-            fixedArea.representedObject = it->second;
+
+    std::vector<area> fixed_areas;
+    std::vector<__strong id> fixed_objs;
+
+    if (_grid.get_fixed_areas(fixed_areas, fixed_objs, range(rowRange.location, rowRange.length), range(columnRange.location, columnRange.length))) {
+        
+        for (size_t i = 0, maxi = fixed_areas.size(); i < maxi; i++) {
+            LIGridArea *gridArea = gridAreaWithArea(fixed_areas[i]);
+            gridArea.representedObject = fixed_objs[i];
             
-            [fixedAreas addObject:fixedArea];
+            [fixedAreas addObject:gridArea];
         }
     }
+    
     return fixedAreas;
 }
 
@@ -627,100 +582,54 @@ using namespace LIGrid::Util;
     LIGridFieldCell *drawingCell = [self.cell copy];
     LIGridArea      *drawingArea = [[LIGridArea alloc] init];
     
-    GridSpanListRange rowSpanRange, colSpanRange;
-    GetGridSpanListRangesWithRect(rowSpanRange, colSpanRange, _rowSpans, _columnSpans, dirtyRect);
-    
-    for (NSUInteger r = IS_CELL_INDEX(rowSpanRange.start) ? rowSpanRange.start : rowSpanRange.start + 1, maxr = rowSpanRange.end(); r <= maxr; r += 2) {
-        for (NSUInteger c = IS_CELL_INDEX(colSpanRange.start) ? colSpanRange.start : colSpanRange.start + 1, maxc = colSpanRange.end(); c <= maxc; c += 2) {
-            NSRect rect = NSMakeRect(_columnSpans[c].start, _rowSpans[r].start, _columnSpans[c].length, _rowSpans[r].length);
+    _grid.visit_cells(dirtyRect, [&](const area& cell_area, const struct rect& rect, id cell_obj) {
+        drawingArea.rowRange = NSMakeRange(cell_area.rows.start, cell_area.rows.length);
+        drawingArea.columnRange = NSMakeRange(cell_area.cols.start, cell_area.cols.length);
+        drawingArea.representedObject = cell_obj;
 
-            drawingArea.row = r/2;
-            drawingArea.column = c/2;
-            drawingArea.representedObject = nil;
-            
-            BOOL isFixed = NO;
-            GridArea area = drawingArea;
-            for (auto it = _fixedAreaList.begin(); it != _fixedAreaList.end(); it++) {
-                if (area.intersects(*it)) {
-                    isFixed = YES;
+        // FIXME:
+        
+        if (_showsSelection) {
+            BOOL isSelected = NO;
+            for (LIGridArea *selectedArea in self.selectedAreas) {
+                if ([drawingArea intersectsArea:selectedArea]) {
+                    isSelected = YES;
                     break;
                 }
             }
             
-            if (!isFixed) {
-                if (_showsSelection) {
-                    BOOL isSelected = NO;
-                    for (LIGridArea *selectedArea in self.selectedAreas) {
-                        GridArea selectedGridArea = selectedArea;
-                        if (area.intersects(selectedGridArea)) {
-                            isSelected = YES;
-                            break;
-                        }
-                    }
-                    [drawingCell setHighlighted:isSelected && ![drawingArea isEqual:self.editingArea]];
-                }
-                [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:drawingArea]];
-                
-                id effectiveCell = ((_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:drawingArea] : drawingCell);
-                
-                [effectiveCell drawWithFrame:rect inView:self];
-                [effectiveCell setControlView:nil];
-            }
+            [drawingCell setHighlighted:isSelected && ![drawingArea isEqual:self.editingArea]];
         }
-    }
-    
-    GridArea visibleArea(rowSpanRange, colSpanRange);
-    
-    for (auto it = _fixedAreaMap.begin(); it != _fixedAreaMap.end(); it++) {
-        if (it->first.intersects(visibleArea)) {
-            LIGridArea *fixedArea = it->first;
-            fixedArea.representedObject = it->second;
-            
-            NSRect rect = RectWithGridSpanListRanges(it->first.rowSpanRange, it->first.columnSpanRange, _rowSpans, _columnSpans);
-            
-            if (_showsSelection) {
-                BOOL isSelected = NO;
-                for (LIGridArea *selectedArea in self.selectedAreas) {
-                    GridArea selectedGridArea = selectedArea;
-                    if (it->first.intersects(selectedGridArea)) {
-                        isSelected = YES;
-                        break;
-                    }
-                }
-                [drawingCell setHighlighted:isSelected && ![fixedArea isEqual:self.editingArea]];
-            }
-            
-            [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:fixedArea]];
-            
-            id effectiveCell = ((_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:fixedArea] : drawingCell);
-            [effectiveCell drawWithFrame:rect inView:self];
-            [effectiveCell setControlView:nil];
-        }
-    }
+        
+        [drawingCell setObjectValue:[self.dataSource gridControl:self objectValueForArea:drawingArea]];
+        
+        id effectiveCell = ((_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:drawingCell forArea:drawingArea] : drawingCell);
+        
+        [effectiveCell drawWithFrame:rect inView:self];
+        [effectiveCell setControlView:nil];
+
+    });
 }
 
 - (void)drawDividers:(NSRect)dirtyRect {
     LIGridDividerCell *dividerCell = [[LIGridDividerCell alloc] initTextCell:@""];
-    
-    GridSpanListRange rowSpanRange, colSpanRange;
-    GetGridSpanListRangesWithRect(rowSpanRange, colSpanRange, _rowSpans, _columnSpans, dirtyRect);
-    
-    for (NSUInteger r = IS_DIVIDER_INDEX(rowSpanRange.start) ? rowSpanRange.start : rowSpanRange.start + 1, maxr = rowSpanRange.end(); r <= maxr; r += 2) {
-        NSRect rect = NSMakeRect(NSMinX(dirtyRect), _rowSpans[r].start, NSWidth(dirtyRect), _rowSpans[r].length);
+
+    _grid.visit_row_dividers(dirtyRect, [&](size_t idx, const struct rect& rect) {
+        NSRect dividerRect = rect;
         
-        if (!NSIsEmptyRect(rect)) {
+        if (!NSIsEmptyRect(dividerRect)) {
             dividerCell.dividerColor = self.dividerColor;
-            [((_delegateWillDrawCellForRowDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:r/2] : dividerCell) drawWithFrame:rect inView:nil];
+            [((_delegateWillDrawCellForRowDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:idx] : dividerCell) drawWithFrame:dividerRect inView:nil];
         }
-    }
-    for (NSUInteger c = IS_DIVIDER_INDEX(colSpanRange.start) ? colSpanRange.start : colSpanRange.start + 1, maxc = colSpanRange.end(); c <= maxc; c += 2) {
-        NSRect rect = NSMakeRect(_columnSpans[c].start, NSMinY(dirtyRect), _columnSpans[c].length, NSHeight(dirtyRect));
+    });
+    _grid.visit_col_dividers(dirtyRect, [&](size_t idx, const struct rect& rect) {
+        NSRect dividerRect = rect;
         
-        if (!NSIsEmptyRect(rect)) {
+        if (!NSIsEmptyRect(dividerRect)) {
             dividerCell.dividerColor = self.dividerColor;
-            [((_delegateWillDrawCellForColumnDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forColumnDividerAtIndex:c/2] : dividerCell) drawWithFrame:rect inView:nil];
+            [((_delegateWillDrawCellForColumnDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forColumnDividerAtIndex:idx] : dividerCell) drawWithFrame:dividerRect inView:nil];
         }
-    }
+    });
 }
 
 - (void)drawBackground:(NSRect)dirtyRect {

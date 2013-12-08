@@ -11,16 +11,8 @@
 
 @implementation LIGridArea
 
-+ (instancetype)areaWithRow:(NSUInteger)row column:(NSUInteger)column representedObject:(id)object {
-    return [[LIGridArea alloc] initWithRowRange:NSMakeRange(row, 1) columnRange:NSMakeRange(column, 1) representedObject:object];
-}
-
-+ (instancetype)areaWithRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange representedObject:(id)object {
-    return [[LIGridArea alloc] initWithRowRange:rowRange columnRange:columnRange representedObject:object];
-}
-
 - (id)initWithRow:(NSUInteger)row column:(NSUInteger)column representedObject:(id)object {
-    return [self initWithRowRange:NSMakeRange(row, 1) columnRange:NSMakeRange(column, 1) representedObject:object];
+    return [self initWithRowRange:NSMakeRange(row, 0) columnRange:NSMakeRange(column, 0) representedObject:object];
 }
 
 - (id)initWithRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange representedObject:(id)representedObject {
@@ -50,10 +42,10 @@
 }
 
 - (void)setRow:(NSUInteger)row {
-    _rowRange = NSMakeRange(row, 1);
+    _rowRange = NSMakeRange(row, 0);
 }
 - (void)setColumn:(NSUInteger)column {
-    _columnRange = NSMakeRange(column, 1);
+    _columnRange = NSMakeRange(column, 0);
 }
 
 - (NSUInteger)maxRow {
@@ -72,6 +64,16 @@
 
 #pragma mark -
 #pragma mark Intersection
+
+static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
+    NSUInteger minA = range.location, maxA = range.location + range.length;
+    NSUInteger minB = otherRange.location, maxB = otherRange.location + otherRange.length;
+    
+    return !(minA > maxB || maxA < minB);
+}
+- (BOOL)intersectsArea:(LIGridArea *)otherArea {
+    return rangeIntersectsRange(_rowRange, otherArea->_rowRange) && rangeIntersectsRange(_columnRange, otherArea->_columnRange);
+}
 
 - (LIGridArea *)intersectionArea:(LIGridArea *)otherArea {
     return [[LIGridArea alloc] initWithRowRange:NSIntersectionRange(_rowRange, otherArea.rowRange) columnRange:NSIntersectionRange(_columnRange, otherArea.columnRange) representedObject:nil];
@@ -109,8 +111,8 @@
 #pragma mark Description
 
 - (NSString *)description {
-    id rr = (_rowRange.length == 1) ? @(_rowRange.location) : NSStringFromRange(_rowRange);
-    id cr = (_columnRange.length == 1) ? @(_columnRange.location) : NSStringFromRange(_columnRange);
+    id rr = (_rowRange.length == 0) ? @(_rowRange.location) : NSStringFromRange(_rowRange);
+    id cr = (_columnRange.length == 0) ? @(_columnRange.location) : NSStringFromRange(_columnRange);
     
     return [NSString stringWithFormat:@"%@ (r: %@, c: %@): ro = %@", NSStringFromClass([self class]), rr, cr, _representedObject];
 }
@@ -325,18 +327,18 @@ typedef enum {
         
         switch (edge) {
             case LIAreaEdge_Top:
-                newRowRange.location += expandedArea.rowRange.length;
-                newRowRange.length   -= expandedArea.rowRange.length;
+                newRowRange.location    += expandedArea.rowRange.length;
+                newRowRange.length      -= expandedArea.rowRange.length;
                 break;
             case LIAreaEdge_Left:
                 newColumnRange.location += expandedArea.columnRange.length;
                 newColumnRange.length   -= expandedArea.columnRange.length;
                 break;
             case LIAreaEdge_Right:
-                newColumnRange.length -= expandedArea.columnRange.length;
+                newColumnRange.length   -= expandedArea.columnRange.length;
                 break;
             case LIAreaEdge_Bottom:
-                newRowRange.length -= expandedArea.rowRange.length;
+                newRowRange.length      -= expandedArea.rowRange.length;
                 break;
         }
         

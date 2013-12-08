@@ -1,7 +1,7 @@
 LIGridControl
 =============
 
-An efficient variable-sized grid of NSCells. LIGridControl supports Mac OS 10.9 and later. To use LIGridControl, import the contents of the **Classes** folder into your own project. To see a sample of LIGridControl usage, open LIGridControl.xcodeproj and run the sample application which draws a custom grid.
+An efficient variable-sized grid of NSCells. LIGridControl supports Mac OS 10.9 Mavericks and later. To use LIGridControl, import the contents of the **Classes** folder into your own project. To see a sample of LIGridControl usage, open LIGridControl.xcodeproj and run the sample application which draws a custom grid.
 
 Features
 --------
@@ -11,7 +11,29 @@ LIGridControl is an alternative to NSTableView that provides more efficient supp
 Classes
 -------
 
-[TBD]
+LIGridControl contains both Objective C and C++ classes. The C++ implementation serves as a kernel of sorts for layout logic and has been separated from the Objective C portion so that it can be reused in an iOS implementation of the grid. The Mac version of LIGridControl is implemented using the NSController-NSCell system for best performance while a future iOS implementation will use layers.
+
+C++ classes in the project live in the **li::** namespace and include:
+
+- **geom::point** and **geom::rect** - CGPoint and CGRect-like classes which are interchangeable with their CG... equivalent structures, but which add logic like intersection, union, and containment tests.
+
+- **grid::interval**, **grid::span**, and **grid::range** - classes which represent intervals similar to NSRange, but which aren't restricted to integer values. spans are expressed as floats and represent row, column, and divider spacings. ranges are intervals of spans used to represent ranges of row and column spans.
+
+- **grid::area** - a grid cell area. area can represent either a single row:column pair, or ranges of rows and columns in the case of fixed grid areas that join adjacent cells. areas use range objects to represent row and column ranges, but express their ranges in terms of cells rather than spans. for N cells along either the row or column axis, 2N + 1 spans exist: 
+
+		div(0) : cell(0) : div(1) : cell(1) ... div(N) : cell(N) : div(N+1)
+
+- **grid::grid** - a grid layout which stores row, column, and divider sizes. grid also stores fixed grid areas to represent cells that have been joined together and that are tagged with associated Objective C objects. grid is our layout kernel.
+
+Objective C classes in the project implemenet grid visuals and event handling:
+
+- **LIGridControl** - a grid of cells and dividers. In a spreadsheet style layout, LIGridControl is used to represent both the spreadsheet proper and its associated row and column headers. LIGridControl defines both a data source and delegate protocol used to populate grid data and modify how that data is displayed within the grid.
+
+- **LIGridArea** - a cell area that corresponds either to a single row:column pair, or to a range of rows and columns and an associated Objective C object if the area is fixed. 
+
+- **LISelectionArea** - a subclass of LIGridArea used to represent grid selection. Grids can have multiply-selected cells and ranges of cells. LISelectionArea represents each distinct selection in the control, and has methods used to extend selection or to move it. Selection in grids whose cells are all single row:column pairs is a pretty simple matter; but grids with cells that span multiple rows and columns complicate selection logic. LISelectionArea encapsulates and abstracts this complication.
+
+- **LIGridFieldCell**, **LIGridDividerCell** - cells used to display grid cell data and dividers. If you want to change the look of LIGridControl, these are the classes you need to work with or possibly subclass. Associated NSControls for each are included in the project mostly as a convenience - you may want to display a cell or divider outside of a grid (in an inspector, for example) and these controls are how you do it. 
 
 Key Event Handling
 ------------------
@@ -27,7 +49,6 @@ At time of writing, the block is implemented like so:
         if ([keyEvent.characters isEqualToString:@"="]) {
             [weakSelf doCommandBySelector:@selector(insertFunction:)];
             return YES;
-            
         } else {
             NSMutableCharacterSet *editChars = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
             [editChars formUnionWithCharacterSet:[NSCharacterSet punctuationCharacterSet]];
@@ -36,12 +57,10 @@ At time of writing, the block is implemented like so:
                 if ([[keyEvent characters] rangeOfCharacterFromSet:editChars].location != NSNotFound) {
                     [weakSelf editGridArea:weakSelf.selectedArea];
                     [weakSelf.currentEditor insertText:keyEvent.characters];
-                    
                     return YES;
                 }
             }
         }
-        
         return NO;
     };
 

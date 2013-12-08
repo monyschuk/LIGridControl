@@ -39,10 +39,10 @@
 #pragma mark LIGridControlDataSource
 
 - (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl {
-    return 10;
+    return 10000;
 }
 - (NSUInteger)gridControlNumberOfColumns:(LIGridControl *)gridControl {
-    return 10;
+    return 10000;
 }
 
 - (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex {
