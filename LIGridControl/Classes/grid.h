@@ -84,39 +84,6 @@ namespace li {
     namespace grid {
         using namespace li::geom;
         
-        // an abstract interval, used to represent both
-        // a geometric range along a row (y) or column (x) axis,
-        // as well as a range of indices into a list of these
-        // geometric ranges.
-        
-        template <class T>
-        struct interval {
-            T start, length;
-            
-            interval() : start(0), length(0) {}
-            interval(T v) : start(v), length(0) {}
-            interval(T start, T length) : start(start), length(length) {}
-            
-            bool operator<(const interval<T>& i) const {
-                return (start < i.start) or (start == i.start and length < i.length);
-            }
-            
-            bool contains(T v) const {
-                return (v >= start && v < start + length);
-            }
-            
-            bool intersects(const interval& i) const {
-                T minA = start, maxA = start + length;
-                T minB = i.start, maxB = i.start + i.length;
-                
-                return !(minA > maxB || maxA < minB);
-            }
-
-            T get_end() const {
-                return start + length;
-            }
-        };
-        
         // span is the basic unit of grid layout, it can be either a row or column span,
         // and depending upon its location in the list of rows or columns, its either a
         // divider or cell span...
@@ -126,10 +93,44 @@ namespace li {
         // the last divider (index=N, even). in general, this means that for a grid of size N x M
         // we hold (N * 2 + 1) row spans and (M * 2 + 1) column spans
         
-        typedef interval<float>     span;
-        typedef interval<size_t>    range;
+        struct span {
+            float start, length;
+            
+            span() : start(0), length(0) {}
+            span(float v) : start(v), length(0) {}
+            span(float s, float l) : start(s), length(l) {}
+            
+            inline float get_end() const {
+                return start + length;
+            }
+        };
+        
+        typedef std::vector<span> span_list;
 
-        typedef std::vector<span>   span_list;
+        // range represents ranges of cells along the row or column axis
+        
+        struct range {
+            size_t start, length;
+            
+            range() : start(0), length(0) {}
+            range(size_t v) : start(v), length(0) {}
+            range(size_t s, size_t l) : start(s), length(l) {}
+
+            bool operator<(const range& i) const {
+                return (start < i.start) or (start == i.start and length < i.length);
+            }
+
+            bool contains(size_t v) const {
+                return (length == 0) ? (v == start) : (v >= start and v < (start + length));
+            }
+            bool intersects(const range& i) const {
+                return (contains(i.start) or contains(i.start + i.length) or i.contains(start) or i.contains(start + length));
+            }
+
+            inline size_t get_end() const {
+                return start + length;
+            }
+        };
         
         // area is a grid slice, expressed as a range of row and column *cells* within a grid.
         // note that this is a row of cells, and not dividers, so indexes into the underlying grid
