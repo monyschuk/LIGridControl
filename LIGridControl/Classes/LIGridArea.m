@@ -106,7 +106,6 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
     return other != nil && NSEqualRanges(_rowRange, other->_rowRange) && NSEqualRanges(_columnRange, other->_columnRange);
 }
 
-
 #pragma mark -
 #pragma mark Description
 
@@ -120,21 +119,12 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
 @end
 
 
-@implementation LISelectionArea {
-    NSInteger _extentDown, _extentRight;
-}
+@implementation LISelectionArea
 
 - (id)initWithGridArea:(LIGridArea *)gridArea control:(LIGridControl *)gridControl {
-    return [self initWithGridArea:gridArea control:gridControl extentDown:0 extentRight:0];
-}
-
-- (id)initWithGridArea:(LIGridArea *)gridArea control:(LIGridControl *)gridControl extentDown:(NSInteger)extentDown extentRight:(NSInteger)extentRight {
     if ((self = [super initWithRowRange:gridArea.rowRange columnRange:gridArea.columnRange representedObject:nil])) {
         _gridArea       = gridArea;
         _gridControl    = gridControl;
-        
-        _extentDown     = extentDown;
-        _extentRight    = extentRight;
     }
     return self;
 }
@@ -144,9 +134,6 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
     
     copy->_gridArea     = _gridArea;
     copy->_gridControl  = _gridControl;
-    
-    copy->_extentDown   = _extentDown;
-    copy->_extentRight  = _extentRight;
     
     return copy;
 }
