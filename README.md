@@ -17,9 +17,11 @@ C++ classes in the project live in the **li::** namespace and include:
 
 - **geom::point** and **geom::rect** - CGPoint and CGRect-like classes which are interchangeable with their CG... equivalent structures, but which add logic like intersection, union, and containment tests.
 
-- **grid::interval**, **grid::span**, and **grid::range** - classes which represent intervals similar to NSRange, but which aren't restricted to integer values. spans are expressed as floats and represent row, column, and divider spacings. ranges are intervals of spans used to represent ranges of row and column spans.
+- **grid::span** - Span represents the starting point and size of a row, column, row divider, or column divider. Grid layouts are, effectively, arrays of spans for the row (y) and column (x) axes.
 
-- **grid::area** - a grid cell area. area can represent either a single row:column pair, or ranges of rows and columns in the case of fixed grid areas that join adjacent cells. areas use range objects to represent row and column ranges, but express their ranges in terms of cells rather than spans. for N cells along either the row or column axis, 2N + 1 spans exist: 
+- **grid::interval** - represents a range of cells or spans along the row or column axis. The interval class provides functions to convert between cell intervals and span intervals.
+
+- **grid::area** - Area represents a grid cell area: either a single (row, column) pair, or a range of rows and columns. Areas use interval objects to represent ranges of rows and columns and express their ranges in terms of cells rather than spans. for N cells along either the row or column axis, 2N + 1 spans exist: 
 
 		div(0) : cell(0) : div(1) : cell(1) ... div(N) : cell(N) : div(N+1)
 
