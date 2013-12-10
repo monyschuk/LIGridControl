@@ -28,10 +28,16 @@
 using namespace li::grid;
 
 static inline area areaWithGridArea(const LIGridArea* gridArea) {
-    return area(range(gridArea.rowRange.location, gridArea.rowRange.length), range(gridArea.columnRange.location, gridArea.columnRange.length));
+    interval ri = gridArea.rowRange;
+    interval ci = gridArea.columnRange;
+    
+    return area(ri, ci);
 }
 static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
-    return [[LIGridArea alloc] initWithRowRange:NSMakeRange(cellArea.rows.start, cellArea.rows.length) columnRange:NSMakeRange(cellArea.cols.start, cellArea.cols.length) representedObject:nil];
+    NSRange rr = cellArea.rows;
+    NSRange cr = cellArea.cols;
+    
+    return [[LIGridArea alloc] initWithRowRange:rr columnRange:cr representedObject:nil];
 }
 
 //
@@ -534,9 +540,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     std::vector<area> fixed_areas;
     std::vector<__strong id> fixed_objs;
 
-    if (_grid.get_fixed_areas(fixed_areas, fixed_objs, range(rowRange.location, rowRange.length), range(columnRange.location, columnRange.length))) {
+    if (_grid.get_fixed_areas(fixed_areas, fixed_objs, interval(rowRange), interval(columnRange))) {
         
-        for (size_t i = 0, maxi = fixed_areas.size(); i < maxi; i++) {
+        for (int_t i = 0, maxi = fixed_areas.size(); i < maxi; i++) {
             LIGridArea *gridArea = gridAreaWithArea(fixed_areas[i]);
             gridArea.representedObject = fixed_objs[i];
             
@@ -583,11 +589,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     LIGridArea      *drawingArea = [[LIGridArea alloc] init];
     
     _grid.visit_cells(dirtyRect, [&](const area& cell_area, const struct rect& rect, id cell_obj) {
-        drawingArea.rowRange = NSMakeRange(cell_area.rows.start, cell_area.rows.length);
-        drawingArea.columnRange = NSMakeRange(cell_area.cols.start, cell_area.cols.length);
+        drawingArea.rowRange = cell_area.rows;
+        drawingArea.columnRange = cell_area.cols;
         drawingArea.representedObject = cell_obj;
-
-        // FIXME:
         
         if (_showsSelection) {
             BOOL isSelected = NO;
@@ -614,7 +618,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 - (void)drawDividers:(NSRect)dirtyRect {
     LIGridDividerCell *dividerCell = [[LIGridDividerCell alloc] initTextCell:@""];
 
-    _grid.visit_row_dividers(dirtyRect, [&](size_t idx, const struct rect& rect) {
+    _grid.visit_row_dividers(dirtyRect, [&](int_t idx, const struct rect& rect) {
         NSRect dividerRect = rect;
         
         if (!NSIsEmptyRect(dividerRect)) {
@@ -622,7 +626,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
             [((_delegateWillDrawCellForRowDivider) ? [self.delegate gridControl:self willDrawCell:dividerCell forRowDividerAtIndex:idx] : dividerCell) drawWithFrame:dividerRect inView:nil];
         }
     });
-    _grid.visit_col_dividers(dirtyRect, [&](size_t idx, const struct rect& rect) {
+    _grid.visit_col_dividers(dirtyRect, [&](int_t idx, const struct rect& rect) {
         NSRect dividerRect = rect;
         
         if (!NSIsEmptyRect(dividerRect)) {

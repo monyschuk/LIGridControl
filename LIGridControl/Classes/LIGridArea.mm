@@ -70,8 +70,8 @@ using namespace li::grid;
 #pragma mark Intersection
 
 static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
-    struct range r1 = range;
-    struct range r2 = otherRange;
+    struct interval r1 = range;
+    struct interval r2 = otherRange;
     
     return r1.intersects(r2);
 }
@@ -84,8 +84,8 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
 }
 
 - (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column {
-    struct range rr = _rowRange;
-    struct range cr = _columnRange;
+    struct interval rr = _rowRange;
+    struct interval cr = _columnRange;
     
     return rr.contains(row) && cr.contains(column);
 }

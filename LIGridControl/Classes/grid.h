@@ -108,49 +108,28 @@ namespace li {
         
         typedef std::vector<span> span_list;
 
-        // range represents ranges of cells along the row or column axis
+        // interval represents ranges of cells along the row or column axis,
+        // or ranges of spans along the row or column axis, convertable through
+        // member functions.
         
-        struct range {
-            size_t start, length;
-            
-            range() : start(0), length(0) {}
-            range(size_t v) : start(v), length(0) {}
-            range(size_t s, size_t l) : start(s), length(l) {}
-
-            bool operator<(const range& i) const {
-                return (start < i.start) or (start == i.start and length < i.length);
-            }
-
-            bool contains(size_t v) const {
-                return (length == 0) ? (v == start) : (v >= start and v < (start + length));
-            }
-            bool intersects(const range& i) const {
-                return (contains(i.start) or contains(i.start + i.length) or i.contains(start) or i.contains(start + length));
-            }
-
-            inline size_t get_end() const {
-                return start + length;
-            }
-            
-            // conversion
-            operator NSRange() const {
-                return NSMakeRange(start, length);
-            }
-            range(const NSRange& r) : start(r.location), length(r.length) {}
-        };
+        typedef NSUInteger int_t;
+        typedef NSInteger  sint_t;
+        
+        struct interval;
+        struct span_interval;
         
         struct interval {
-            size_t first, second;
+            int_t first, second;
             
             interval() : first(0), second(0) {}
-            interval(size_t v) : first(v), second(v) {}
-            interval(size_t f, size_t s) : first(std::min(f, s)), second(std::max(f, s)) {}
+            interval(int_t v) : first(v), second(v) {}
+            interval(int_t f, int_t s) : first(std::min(f, s)), second(std::max(f, s)) {}
             
-            inline size_t length() {
+            inline int_t length() const {
                 return (second - first) + 1;
             }
             
-            bool contains(const size_t& v) const {
+            bool contains(const int_t& v) const {
                 return (v >= first && v <= second);
             }
             bool intersects(const interval& i) const {
@@ -166,6 +145,14 @@ namespace li {
                 return NSMakeRange(first, second - first + 1);
             }
             interval(const NSRange& r) : first(r.location), second((r.length > 0) ? r.location + r.length - 1 : r.location) {}
+
+            // span/cell interval conversion
+            inline interval to_span_interval() const {
+                return interval(first*2+1, second*2+1);
+            }
+            inline interval to_cell_interval() const {
+                return interval((first-1)/2, (second-1)/2);
+            }
         };
         
         // area is a grid slice, expressed as a range of row and column *cells* within a grid.
@@ -174,13 +161,13 @@ namespace li {
         
         class area {
         public:
-            range rows, cols;
+            interval rows, cols;
             
             area() : rows(0), cols(0) {}
-            area(size_t row, size_t col) : rows(row), cols(col) {}
-            area(const range& rows, const range& cols) : rows(rows), cols(cols) {}
+            area(int_t row, int_t col) : rows(row), cols(col) {}
+            area(const interval& rows, const interval& cols) : rows(rows), cols(cols) {}
                         
-            bool contains(size_t row, size_t col) const {
+            bool contains(int_t row, int_t col) const {
                 return rows.contains(row) && cols.contains(col);
             }
             
@@ -215,8 +202,8 @@ namespace li {
             bool empty() const;
             
             // call reserve..() prior to pushing rows and columns for better performance
-            void reserve_rows(size_t nrows);
-            void reserve_cols(size_t ncols);
+            void reserve_rows(int_t nrows);
+            void reserve_cols(int_t ncols);
             
             void push_row(float size);
             void push_col(float size);
@@ -226,30 +213,30 @@ namespace li {
 
             void push_fixed(const area& fixed, __strong id obj);
 
-            size_t get_row_count() const { return rows.size(); }
-            size_t get_col_count() const { return cols.size(); }
+            int_t get_row_count() const { return rows.size(); }
+            int_t get_col_count() const { return cols.size(); }
             
             float get_width() const { return cols.empty() ? 0 : cols.back().get_end(); }
             float get_height() const { return rows.empty() ? 0 : rows.back().get_end(); }
             
-            bool get_cell_coord(size_t& row_idx, size_t& col_idx, const point& p);
+            bool get_cell_coord(int_t& row_idx, int_t& col_idx, const point& p);
 
             bool get_cell_area(area& cell_area, __strong id& cell_obj, const point& p);
-            bool get_cell_area(area& cell_area, __strong id& cell_obj, const size_t& row_idx, const size_t& col_idx);
+            bool get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& row_idx, const int_t& col_idx);
             
-            bool get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const range& cell_row_range, const range& cell_column_range);
+            bool get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const interval& row_interval, const interval& column_interval);
             
             rect get_area_rect(const area& cell_area) const;
-            rect get_area_rect(const size_t& row, const size_t& col) const;
+            rect get_area_rect(const int_t& row, const int_t& col) const;
             
-            rect get_row_divider_rect(const size_t& row) const;
-            rect get_col_divider_rect(const size_t& col) const;
+            rect get_row_divider_rect(const int_t& row) const;
+            rect get_col_divider_rect(const int_t& col) const;
             
-            rect get_span_range_rect(const range& row_range, const range& col_range) const;
-            void get_span_ranges(range& row_range, range& col_range, const rect& rect) const;
+            rect get_span_interval_rect(const interval& row_span_interval, const interval& col_span_interval) const;
+            void get_span_intervals(interval& row_span_interval, interval& col_span_interval, const rect& rect) const;
 
-            void visit_row_dividers(const rect& rect, std::function<void(size_t, const struct rect&)>visitor) const;
-            void visit_col_dividers(const rect& rect, std::function<void(size_t, const struct rect&)>visitor) const;
+            void visit_row_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const;
+            void visit_col_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const;
 
             void visit_cells(const rect& rect, std::function<void(const area&, const struct rect&, __strong id)>visitor) const;
         };

@@ -23,10 +23,10 @@ bool grid::empty() const {
     return rows.empty() || cols.empty();
 }
 
-void grid::reserve_rows(size_t nrows) {
+void grid::reserve_rows(int_t nrows) {
     rows.reserve(nrows*2 + 1);
 }
-void grid::reserve_cols(size_t ncols) {
+void grid::reserve_cols(int_t ncols) {
     cols.reserve(ncols*2 + 1);
 }
 
@@ -103,8 +103,8 @@ void grid::push_fixed(const area& area, __strong id obj) {
 // returns true if value exists within the given span list, and populates index with the index of
 // the span that contains value. if match_nearest is true then the nearest matching index is returned.
 
-static bool get_span_index(size_t& index, const span_list& spans, const double value, bool match_nearest = false) {
-    size_t len = spans.size();
+static bool get_span_index(int_t& index, const span_list& spans, const double value, bool match_nearest = false) {
+    int_t len = spans.size();
     
     if (len > 0) {
         if (match_nearest) {
@@ -120,10 +120,10 @@ static bool get_span_index(size_t& index, const span_list& spans, const double v
             }
         }
         
-        size_t imin = 0, imax = len - 1;
+        int_t imin = 0, imax = len - 1;
         
         while (imax >= imin) {
-            size_t  imid = (imin + imax) / 2;
+            int_t  imid = (imin + imax) / 2;
             
             double  minv = spans[imid].start;
             double  maxv = spans[imid].start + spans[imid].length;
@@ -144,11 +144,11 @@ static bool get_span_index(size_t& index, const span_list& spans, const double v
     return false;
 }
 
-bool grid::get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const range& cell_row_range, const range& cell_column_range) {
+bool grid::get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const interval& row_interval, const interval& col_interval) {
     bool found = false;
     
     for (auto pair : fixed) {
-        if (pair.first.rows.intersects(cell_row_range) && pair.first.cols.intersects(cell_column_range)) {
+        if (pair.first.rows.intersects(row_interval) && pair.first.cols.intersects(col_interval)) {
             fixed_areas.push_back(pair.first);
             fixed_objs.push_back(pair.second);
             
@@ -160,11 +160,11 @@ bool grid::get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong 
 }
 
 rect grid::get_area_rect(const area& cell_area) const {
-    size_t minr = cell_area.rows.start;
-    size_t minc = cell_area.cols.start;
+    int_t minr = cell_area.rows.first;
+    int_t minc = cell_area.cols.first;
     
-    size_t maxr = cell_area.rows.get_end(); //if (maxr > minr) maxr -= 1;
-    size_t maxc = cell_area.cols.get_end(); //if (maxc > minc) maxc -= 1;
+    int_t maxr = cell_area.rows.second;
+    int_t maxc = cell_area.cols.second;
 
     rect   minrect = get_area_rect(minr, minc);
     rect   maxrect = get_area_rect(maxr, maxc);
@@ -172,66 +172,74 @@ rect grid::get_area_rect(const area& cell_area) const {
     return minrect.union_rect(maxrect);
 }
 
-rect grid::get_area_rect(const size_t& row, const size_t& col) const {
-    range row_range((row*2)+1, 0);
-    range col_range((col*2)+1, 0);
+rect grid::get_area_rect(const int_t& row, const int_t& col) const {
+    interval row_range = interval(row).to_span_interval();
+    interval col_range = interval(col).to_span_interval();
     
-    return get_span_range_rect(row_range, col_range);
+    return get_span_interval_rect(row_range, col_range);
 }
 
-rect grid::get_row_divider_rect(const size_t& row) const {
-    return get_span_range_rect(range(row*2), range(0, cols.size()));
+rect grid::get_row_divider_rect(const int_t& row) const {
+    interval row_range = interval(row).to_span_interval();
+    interval col_range = interval(0, get_col_count() - 1).to_span_interval();
+    
+    return get_span_interval_rect(row_range, col_range);
 }
-rect grid::get_col_divider_rect(const size_t& col) const {
-    return get_span_range_rect(range(0, rows.size()), range(col*2));
+rect grid::get_col_divider_rect(const int_t& col) const {
+    interval row_range = interval(0, get_row_count() - 1).to_span_interval();
+    interval col_range = interval(col).to_span_interval();
+    
+    return get_span_interval_rect(row_range, col_range);
 }
 
 // returns a rectangle containing spans in row_range, col_range
 
-rect grid::get_span_range_rect(const range& row_range, const range& col_range) const {
-    double minr = rows[row_range.start].start;
-    double maxr = rows[row_range.get_end()].get_end();
+rect grid::get_span_interval_rect(const interval& row_span_interval, const interval& col_span_interval) const {
+    double minr = rows[row_span_interval.first].start;
+    double maxr = rows[row_span_interval.second].get_end();
     
-    double minc = cols[col_range.start].start;
-    double maxc = cols[col_range.get_end()].get_end();
+    double minc = cols[col_span_interval.first].start;
+    double maxc = cols[col_span_interval.second].get_end();
     
     return rect(point(minc, minr), point(maxc, maxr));
 }
 
 // returns the associated row and column span ranges corresponding to rect
 
-void grid::get_span_ranges(range& row_range, range& col_range, const rect& rect) const {
+void grid::get_span_intervals(interval& row_span_range, interval& col_span_range, const rect& rect) const {
     double rmin = rect.pmin.y;
     double rmax = rect.pmax.y;
     double cmin = rect.pmin.x;
     double cmax = rect.pmax.x;
     
-    size_t rmini, rmaxi, cmini, cmaxi;
+    int_t rmin_idx, rmax_idx, cmin_idx, cmax_idx;
     
-    get_span_index(rmini, rows, rmin, true);
-    get_span_index(rmaxi, rows, rmax, true);
-    get_span_index(cmini, cols, cmin, true);
-    get_span_index(cmaxi, cols, cmax, true);
+    get_span_index(rmin_idx, rows, rmin, true);
+    get_span_index(rmax_idx, rows, rmax, true);
+    get_span_index(cmin_idx, cols, cmin, true);
+    get_span_index(cmax_idx, cols, cmax, true);
     
-    row_range.start  = rmini;
-    row_range.length = rmaxi - rmini;
+    row_span_range.first  = rmin_idx;
+    row_span_range.second = rmax_idx;
     
-    col_range.start  = cmini;
-    col_range.length = cmaxi - cmini;
+    col_span_range.first  = cmin_idx;
+    col_span_range.second = cmax_idx;
 }
 
 // returns by reference the area (and associated object if fixed) at point p
 
 bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const point& p) {
-    size_t row_idx, col_idx;
+    int_t row_idx, col_idx;
 
     return (get_cell_coord(row_idx, col_idx, p)) ? get_cell_area(cell_area, cell_obj, row_idx, col_idx) : false;
 }
 
-bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const size_t& row_idx, const size_t& col_idx) {
+// returns by reference the area (and associated object if fixed) at (row_idx, col_idx)
+
+bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& row_idx, const int_t& col_idx) {
     if (row_idx < rows.size() && col_idx < cols.size()) {
         
-        // fixed areas...
+        // check fixed areas...
         for (auto pair : fixed) {
             if (pair.first.contains(row_idx, col_idx)) {
                 cell_area = pair.first;
@@ -241,7 +249,7 @@ bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const size_t& r
             }
         }
         
-        // standard areas...
+        // it's a standard area...
         cell_area = area(row_idx, col_idx);
         cell_obj  = nil;
         
@@ -251,15 +259,17 @@ bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const size_t& r
     return false;
 }
 
-bool grid::get_cell_coord(size_t& row_index, size_t& col_index, const point& p) {
-    size_t ridx, cidx;
+// returns the cell row and column indexes at point p
 
-    if (get_span_index(ridx, rows, p.y)
-        and get_span_index(cidx, cols, p.x)
-        and is_cell(ridx) and is_cell(cidx)) {
+bool grid::get_cell_coord(int_t& row_index, int_t& col_index, const point& p) {
+    int_t row_span_index, col_span_index;
+
+    if (get_span_index(row_span_index, rows, p.y)
+        and get_span_index(col_span_index, cols, p.x)
+        and is_cell(row_span_index) and is_cell(col_span_index)) {
         
-        row_index = (ridx-1)/2;
-        col_index = (cidx-1)/2;
+        row_index = (row_span_index-1)/2;
+        col_index = (col_span_index-1)/2;
         
         return true;
     }
@@ -267,47 +277,52 @@ bool grid::get_cell_coord(size_t& row_index, size_t& col_index, const point& p) 
     return false;
 }
 
-void grid::visit_row_dividers(const rect& rect, std::function<void(size_t, const struct rect&)>visitor) const {
-    range row_range, col_range;
-    get_span_ranges(row_range, col_range, rect);
+void grid::visit_row_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const {
+    interval row_span_interval, col_span_interval;
+    get_span_intervals(row_span_interval, col_span_interval, rect);
     
-    for (size_t ridx = is_divider(row_range.start) ? row_range.start : row_range.start + 1,
-         rmax = row_range.get_end();
-         ridx < rmax;
-         ridx+=2) {
+    for (int_t span_idx = is_divider(row_span_interval.first) ? row_span_interval.first : row_span_interval.first + 1,
+         max_span_idx = row_span_interval.second;
+         span_idx <= max_span_idx;
+         span_idx+=2) {
         
-        visitor(ridx/2, get_span_range_rect(range(ridx), col_range));
+        int_t div_idx = span_idx/2;
+        
+        visitor(div_idx, get_span_interval_rect(interval(span_idx), col_span_interval));
     }
 }
 
-void grid::visit_col_dividers(const rect& rect, std::function<void(size_t, const struct rect&)>visitor) const {
-    range row_range, col_range;
-    get_span_ranges(row_range, col_range, rect);
+void grid::visit_col_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const {
+    interval row_span_interval, col_span_interval;
+    get_span_intervals(row_span_interval, col_span_interval, rect);
 
-    for (size_t cidx = is_divider(col_range.start) ? col_range.start : col_range.start + 1,
-         cmax = col_range.get_end();
-         cidx < cmax;
-         cidx+=2) {
+    for (int_t span_idx = is_divider(col_span_interval.first) ? col_span_interval.first : col_span_interval.first + 1,
+         max_span_idx = col_span_interval.second;
+         span_idx <= max_span_idx;
+         span_idx+=2) {
         
-        visitor(cidx/2, get_span_range_rect(row_range, range(cidx)));
+        int_t div_idx = span_idx/2;
+        
+        visitor(div_idx, get_span_interval_rect(row_span_interval, interval(span_idx)));
     }
 }
 
 void grid::visit_cells(const rect& rect, std::function<void(const area&, const struct rect&, __strong id)>visitor) const {
-    range row_range, col_range;
-    get_span_ranges(row_range, col_range, rect);
+    interval row_span_interval, col_span_interval;
+    get_span_intervals(row_span_interval, col_span_interval, rect);
     
-    for (size_t ridx = is_cell(row_range.start) ? row_range.start : row_range.start + 1,
-         rmax = row_range.get_end();
-         ridx <= rmax;
-         ridx+=2) {
-        for (size_t cidx = is_cell(col_range.start) ? col_range.start : col_range.start + 1,
-             cmax = col_range.get_end();
-             cidx <= cmax;
-             cidx+=2) {
+    for (int_t row_span_idx = is_cell(row_span_interval.first) ? row_span_interval.first : row_span_interval.first + 1,
+         max_row_span_idx = row_span_interval.second;
+         row_span_idx <= max_row_span_idx;
+         row_span_idx+=2) {
+        
+        for (int_t col_span_idx = is_cell(col_span_interval.first) ? col_span_interval.first : col_span_interval.first + 1,
+             max_col_span_idx = col_span_interval.second;
+             col_span_idx <= max_col_span_idx;
+             col_span_idx+=2) {
 
-            size_t r = (ridx-1)/2;
-            size_t c = (cidx-1)/2;
+            int_t r = (row_span_idx-1)/2;
+            int_t c = (col_span_idx-1)/2;
             
             bool is_fixed = false;
 
@@ -326,11 +341,11 @@ void grid::visit_cells(const rect& rect, std::function<void(const area&, const s
     }
     
     for (auto pair : fixed) {
-        range rr(pair.first.rows.start*2+1, (pair.first.rows.length-1)*2);
-        range cr(pair.first.cols.start*2+1, (pair.first.cols.length-1)*2);
+        interval fixed_row_span_interval = pair.first.rows.to_span_interval();
+        interval fixed_col_span_interval = pair.first.cols.to_span_interval();
         
-        if (rr.intersects(row_range)
-            and cr.intersects(col_range)) {
+        if (fixed_row_span_interval.intersects(row_span_interval)
+            and fixed_col_span_interval.intersects(col_span_interval)) {
             
             visitor(pair.first, get_area_rect(pair.first), pair.second);
         }
