@@ -163,8 +163,8 @@ rect grid::get_area_rect(const area& cell_area) const {
     size_t minr = cell_area.rows.start;
     size_t minc = cell_area.cols.start;
     
-    size_t maxr = cell_area.rows.get_end(); if (maxr > minr) maxr -= 1;
-    size_t maxc = cell_area.cols.get_end(); if (maxc > minc) maxc -= 1;
+    size_t maxr = cell_area.rows.get_end(); //if (maxr > minr) maxr -= 1;
+    size_t maxc = cell_area.cols.get_end(); //if (maxc > minc) maxc -= 1;
 
     rect   minrect = get_area_rect(minr, minc);
     rect   maxrect = get_area_rect(maxr, maxc);

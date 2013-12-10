@@ -10,6 +10,7 @@
 #define __LIGridControl__grid__
 
 #include <map>
+#include <cmath>
 #include <vector>
 #include <algorithm>
 
@@ -130,6 +131,41 @@ namespace li {
             inline size_t get_end() const {
                 return start + length;
             }
+            
+            // conversion
+            operator NSRange() const {
+                return NSMakeRange(start, length);
+            }
+            range(const NSRange& r) : start(r.location), length(r.length) {}
+        };
+        
+        struct interval {
+            size_t first, second;
+            
+            interval() : first(0), second(0) {}
+            interval(size_t v) : first(v), second(v) {}
+            interval(size_t f, size_t s) : first(std::min(f, s)), second(std::max(f, s)) {}
+            
+            inline size_t length() {
+                return (second - first) + 1;
+            }
+            
+            bool contains(const size_t& v) const {
+                return (v >= first && v <= second);
+            }
+            bool intersects(const interval& i) const {
+                return (contains(i.first) or contains(i.second) or i.contains(first) or i.contains(second));
+            }
+
+            bool operator<(const interval& i) const {
+                return (first < i.first) or ((first == i.first) && second < i.second);
+            }
+            
+            // conversion
+            operator NSRange() const {
+                return NSMakeRange(first, second - first + 1);
+            }
+            interval(const NSRange& r) : first(r.location), second((r.length > 0) ? r.location + r.length - 1 : r.location) {}
         };
         
         // area is a grid slice, expressed as a range of row and column *cells* within a grid.

@@ -9,6 +9,10 @@
 #import "LIGridArea.h"
 #import "LIGridControl.h"
 
+#include "grid.h"
+
+using namespace li::grid;
+
 @implementation LIGridArea
 
 - (id)initWithRow:(NSUInteger)row column:(NSUInteger)column representedObject:(id)object {
@@ -66,10 +70,10 @@
 #pragma mark Intersection
 
 static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
-    NSUInteger minA = range.location, maxA = range.location + range.length;
-    NSUInteger minB = otherRange.location, maxB = otherRange.location + otherRange.length;
+    struct range r1 = range;
+    struct range r2 = otherRange;
     
-    return !(minA > maxB || maxA < minB);
+    return r1.intersects(r2);
 }
 - (BOOL)intersectsArea:(LIGridArea *)otherArea {
     return rangeIntersectsRange(_rowRange, otherArea->_rowRange) && rangeIntersectsRange(_columnRange, otherArea->_columnRange);
@@ -80,7 +84,10 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
 }
 
 - (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column {
-    return NSLocationInRange(row, _rowRange) && NSLocationInRange(column, _columnRange);
+    struct range rr = _rowRange;
+    struct range cr = _columnRange;
+    
+    return rr.contains(row) && cr.contains(column);
 }
 
 - (BOOL)intersectsRowRange:(NSRange)rowRange columnRange:(NSRange)columnRange {
@@ -122,8 +129,9 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
 @implementation LISelectionArea
 
 - (id)initWithGridArea:(LIGridArea *)gridArea control:(LIGridControl *)gridControl {
-    if ((self = [super initWithRowRange:gridArea.rowRange columnRange:gridArea.columnRange representedObject:nil])) {
-        _gridArea       = gridArea;
+    LIGridArea *effectiveArea = [gridControl areaAtRow:gridArea.row column:gridArea.column];
+    if ((self = [super initWithRowRange:effectiveArea.rowRange columnRange:effectiveArea.columnRange representedObject:nil])) {
+        _gridArea       = effectiveArea;
         _gridControl    = gridControl;
     }
     return self;

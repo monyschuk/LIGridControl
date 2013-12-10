@@ -24,7 +24,7 @@
 		4D73796A184E9EC9000F3EDB /* grid.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D737968184E9EC9000F3EDB /* grid.mm */; };
 		4D84B8B8184244F60053E6CA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D84B8B7184244F60053E6CA /* QuartzCore.framework */; };
 		4DA651A0184272B7006B5791 /* LIGridDivider.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA6519F184272B7006B5791 /* LIGridDivider.m */; };
-		4DA651A3184278EC006B5791 /* LIGridArea.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DA651A2184278EC006B5791 /* LIGridArea.m */; };
+		4DA651A3184278EC006B5791 /* LIGridArea.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DA651A2184278EC006B5791 /* LIGridArea.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,7 +69,7 @@
 		4DA6519E184272B7006B5791 /* LIGridDivider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGridDivider.h; sourceTree = "<group>"; };
 		4DA6519F184272B7006B5791 /* LIGridDivider.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LIGridDivider.m; sourceTree = "<group>"; };
 		4DA651A1184278EC006B5791 /* LIGridArea.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGridArea.h; sourceTree = "<group>"; };
-		4DA651A2184278EC006B5791 /* LIGridArea.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LIGridArea.m; sourceTree = "<group>"; };
+		4DA651A2184278EC006B5791 /* LIGridArea.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LIGridArea.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -181,7 +181,7 @@
 			isa = PBXGroup;
 			children = (
 				4DA651A1184278EC006B5791 /* LIGridArea.h */,
-				4DA651A2184278EC006B5791 /* LIGridArea.m */,
+				4DA651A2184278EC006B5791 /* LIGridArea.mm */,
 				4D117789183AC92B0055CEB0 /* LIGridField.h */,
 				4D11778A183AC92B0055CEB0 /* LIGridField.m */,
 				4DA6519E184272B7006B5791 /* LIGridDivider.h */,
@@ -298,7 +298,7 @@
 				4DA651A0184272B7006B5791 /* LIGridDivider.m in Sources */,
 				4D73796A184E9EC9000F3EDB /* grid.mm in Sources */,
 				4D11775E183AC8E30055CEB0 /* main.m in Sources */,
-				4DA651A3184278EC006B5791 /* LIGridArea.m in Sources */,
+				4DA651A3184278EC006B5791 /* LIGridArea.mm in Sources */,
 				4D117765183AC8E30055CEB0 /* LIAppDelegate.m in Sources */,
 				4D11778B183AC92B0055CEB0 /* LIGridField.m in Sources */,
 				4D11778F183D6D2A0055CEB0 /* LISpreadsheetControl.m in Sources */,
