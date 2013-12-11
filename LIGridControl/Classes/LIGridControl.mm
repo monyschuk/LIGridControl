@@ -57,8 +57,8 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 }
 
 // properties used during editing
+@property(nonatomic, strong) NSCell *editingCell;
 @property(nonatomic, strong) LIGridArea *editingArea;
-@property(nonatomic, strong) NSCell     *editingCell;
 
 @end
 
@@ -91,15 +91,15 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     _dividerColor       = DF_DIVIDER_COLOR;
     _backgroundColor    = DF_BACKGROUND_COLOR;
     
-    _showsSelection     = YES;
-    _selectedAreas      = @[];
+    _selections         = @[];
+    _showsSelections    = YES;
     
     self.cell = [[LIGridFieldCell alloc] initTextCell:@""];
 
     
     // default key event handling block
     __weak LIGridControl *weakSelf  = self;
-    _keyDownHandler                 = ^BOOL(NSEvent *keyEvent) {
+    _keyDownHandler = ^BOOL(NSEvent *keyEvent) {
         if ([keyEvent.characters isEqualToString:@"="]) {
             [weakSelf doCommandBySelector:@selector(insertFunction:)];
             return YES;
@@ -108,11 +108,11 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
             NSMutableCharacterSet *editChars = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
             [editChars formUnionWithCharacterSet:[NSCharacterSet punctuationCharacterSet]];
             
-            NSArray *selectedAreas = weakSelf.selectedAreas;
+            NSArray *selections = weakSelf.selections;
             
-            if (selectedAreas.count == 1) {
+            if (selections.count == 1) {
                 if ([[keyEvent characters] rangeOfCharacterFromSet:editChars].location != NSNotFound) {
-                    LIGridSelection *selection = selectedAreas.lastObject;
+                    LIGridSelection *selection = selections.lastObject;
                     
                     [weakSelf editArea:selection.editingArea];
                     [weakSelf.currentEditor insertText:keyEvent.characters];
@@ -228,25 +228,25 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 #pragma mark -
 #pragma mark Selection
 
-- (void)setShowsSelection:(BOOL)showsSelection {
-    if (_showsSelection != showsSelection) {
-        _showsSelection = showsSelection;
+- (void)setShowsSelection:(BOOL)showsSelections {
+    if (_showsSelections != showsSelections) {
+        _showsSelections = showsSelections;
         
-        if (self.selectedAreas.count) {
+        if (self.selections.count) {
             [self setNeedsDisplay:YES];
         }
     }
 }
 
-- (void)setSelectedAreas:(NSArray *)selectedAreas {
-    if (_selectedAreas != selectedAreas) {
+- (void)setSelections:(NSArray *)selections {
+    if (_selections != selections) {
         // redraw old selection
-        for (LIGridSelection *selection in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
+        for (LIGridSelection *selection in _selections) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
 
-        _selectedAreas = [selectedAreas copy];
+        _selections = [selections copy];
         
         // draw new selection...
-        for (LIGridSelection *selection in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
+        for (LIGridSelection *selection in _selections) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
     }
 }
 
@@ -269,23 +269,23 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     NSUInteger row, col;
     if ([self getRow:&row column:&col atPoint:location]) {
         
-        LIGridSelection *selection      = [[LIGridSelection alloc] initWithRow:row column:col gridControl:self];
-        NSMutableArray  *selectedAreas  = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+        LIGridSelection *selected = [[LIGridSelection alloc] initWithRow:row column:col gridControl:self];
+        NSMutableArray  *selections = self.selections.mutableCopy;
 
-        [self scrollToArea:selection.gridArea animate:YES];
+        [self scrollToArea:selected.gridArea animate:YES];
         
-        if ([[selectedAreas valueForKey:@"gridArea"] containsObject:selection.gridArea]) {
-            [self editArea:selection.editingArea];
+        if ([[selections valueForKey:@"gridArea"] containsObject:selected.gridArea]) {
+            [self editArea:selected.editingArea];
             
         } else {
             if (theEvent.modifierFlags & NSShiftKeyMask) {
-                [selectedAreas addObject:selection];
+                [selections addObject:selected];
                 
             } else {
-                [selectedAreas setArray:@[selection]];
+                [selections setArray:@[selected]];
             }
             
-            self.selectedAreas = selectedAreas;
+            self.selections = selections;
         }
     }
 }
@@ -311,11 +311,11 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 }
 
 - (void)moveInDirection:(LIDirection)direction extendSelection:(BOOL)extendSelection {
-    LIGridSelection *selection  = self.selectedAreas.lastObject;
+    LIGridSelection *selection  = self.selections.lastObject;
     
     if (selection != nil) {
         LIGridSelection *nextSelectedArea = nil;
-        NSMutableArray  *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
+        NSMutableArray  *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selections];
         
         if (extendSelection) {
             nextSelectedArea = [selection selectionByResizingInDirection:direction];
@@ -329,7 +329,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
             [newSelectedAreas addObject:nextSelectedArea];
         }
         
-        self.selectedAreas = newSelectedAreas;
+        self.selections = newSelectedAreas;
         
         // FIXME: we should have nextSelectedArea suggest the scroll-to area
         [self scrollToArea:nextSelectedArea.gridArea animate:YES];
@@ -376,7 +376,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     editingCell = (_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:(id)editingCell forArea:area] : editingCell;
     
     if (editingCell.isEditable || editingCell.isSelectable) {
-        self.selectedAreas = @[self.selectedAreas.lastObject];
+        self.selections = @[[[LIGridSelection alloc] initWithRow:area.row column:area.column gridControl:self]];
         [self scrollToArea:area animate:NO];
         
         self.editingArea = area;
@@ -479,7 +479,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         [self performSelector:commandSelector withObject:self];
 #pragma clang diagnostic pop
         
-        LIGridSelection *nextSelection = self.selectedAreas.lastObject;
+        LIGridSelection *nextSelection = self.selections.lastObject;
         
         if (![nextSelection.editingArea isEqual:previousArea]) {
             [self editArea:nextSelection.editingArea];
@@ -602,9 +602,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         drawingArea.columnRange = cell_area.cols;
         drawingArea.representedObject = cell_obj;
         
-        if (_showsSelection) {
+        if (_showsSelections) {
             BOOL isSelected = NO;
-            for (LIGridSelection *selection in self.selectedAreas) {
+            for (LIGridSelection *selection in self.selections) {
                 if ([drawingArea intersectsArea:selection.gridArea]) {
                     isSelected = YES;
                     break;
