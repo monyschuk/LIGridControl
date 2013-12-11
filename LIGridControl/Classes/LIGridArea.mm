@@ -63,6 +63,8 @@ using namespace li::grid;
 #pragma mark Union
 
 - (LIGridArea *)unionArea:(LIGridArea *)otherArea {
+    if (otherArea == nil) return self;
+
     return [[LIGridArea alloc] initWithRowRange:NSUnionRange(_rowRange, otherArea.rowRange) columnRange:NSUnionRange(_columnRange, otherArea.columnRange) representedObject:nil];
 }
 
@@ -76,10 +78,14 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
     return r1.intersects(r2);
 }
 - (BOOL)intersectsArea:(LIGridArea *)otherArea {
-    return otherArea != nil && rangeIntersectsRange(_rowRange, otherArea->_rowRange) && rangeIntersectsRange(_columnRange, otherArea->_columnRange);
+    if (otherArea == nil) return NO;
+    
+    return rangeIntersectsRange(_rowRange, otherArea->_rowRange) && rangeIntersectsRange(_columnRange, otherArea->_columnRange);
 }
 
 - (LIGridArea *)intersectionArea:(LIGridArea *)otherArea {
+    if (otherArea == nil) return self;
+
     return [[LIGridArea alloc] initWithRowRange:NSIntersectionRange(_rowRange, otherArea.rowRange) columnRange:NSIntersectionRange(_columnRange, otherArea.columnRange) representedObject:nil];
 }
 
