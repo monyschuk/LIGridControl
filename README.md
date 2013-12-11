@@ -33,7 +33,7 @@ Objective C classes in the project implemenet grid visuals and event handling:
 
 - **LIGridArea** - a cell area that corresponds either to a single row:column pair, or to a range of rows and columns and an associated Objective C object if the area is fixed. 
 
-- **LISelectionArea** - a subclass of LIGridArea used to represent grid selection. Grids can have multiply-selected cells and ranges of cells. LISelectionArea represents each distinct selection in the control, and has methods used to extend selection or to move it. Selection in grids whose cells are all single row:column pairs is a pretty simple matter; but grids with cells that span multiple rows and columns complicate selection logic. LISelectionArea encapsulates and abstracts this complication.
+- **LIGridSelection** - an object used to represent grid selection. Grids can have multiply-selected cells and ranges of cells. LIGridSelection represents each distinct selection in the control, and has methods used to extend selection or to move it. Selection in grids whose cells are all single row:column pairs is a pretty simple matter; but grids with cells that span multiple rows and columns complicate selection logic. LIGridSelection encapsulates and abstracts this complication.
 
 - **LIGridFieldCell**, **LIGridDividerCell** - cells used to display grid cell data and dividers. If you want to change the look of LIGridControl, these are the classes you need to work with or possibly subclass. Associated NSControls for each are included in the project mostly as a convenience - you may want to display a cell or divider outside of a grid (in an inspector, for example) and these controls are how you do it. 
 

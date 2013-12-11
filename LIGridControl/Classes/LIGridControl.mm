@@ -9,6 +9,8 @@
 #import "LIGridControl.h"
 
 #import "LIGridArea.h"
+#import "LIGridSelection.h"
+
 #import "LIGridField.h"
 #import "LIGridDivider.h"
 
@@ -237,12 +239,12 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 - (void)setSelectedAreas:(NSArray *)selectedAreas {
     if (_selectedAreas != selectedAreas) {
         // redraw old selection
-        for (LIGridArea *area in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:area]];
+        for (LIGridSelection *selection in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
 
         _selectedAreas = [selectedAreas copy];
         
         // draw new selection...
-        for (LIGridArea *area in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:area]];
+        for (LIGridSelection *selection in _selectedAreas) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
     }
 }
 
@@ -265,12 +267,13 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     NSUInteger row, col;
     if ([self getRow:&row column:&col atPoint:location]) {
         
-        LISelectionArea *selection      = [[LISelectionArea alloc] initWithGridArea:[[LIGridArea alloc] initWithRow:row column:col representedObject:nil] control:self];
+        LIGridSelection *selection      = [[LIGridSelection alloc] initWithRow:row column:col gridControl:self];
         NSMutableArray  *selectedAreas  = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
 
         [self scrollToArea:selection.gridArea animate:YES];
         
-        if ([selectedAreas containsObject:selection]) {
+        if ([[selectedAreas valueForKey:@"gridArea"] containsObject:selection.gridArea]) {
+            // FIXME: check whether the selection grid area represents a single cell
             [self editArea:selection.gridArea];
             
         } else {
@@ -307,23 +310,28 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 }
 
 - (void)moveInDirection:(LIDirection)direction extendSelection:(BOOL)extendSelection {
-    LISelectionArea *currentArea  = self.selectedAreas.lastObject;
+    LIGridSelection *selection  = self.selectedAreas.lastObject;
     
-    if (currentArea != nil) {
-        LISelectionArea *nextSelectedArea = [currentArea areaByResizingInDirection:direction];
+    if (selection != nil) {
+        LIGridSelection *nextSelectedArea = nil;
         NSMutableArray  *newSelectedAreas = [[NSMutableArray alloc] initWithArray:self.selectedAreas];
         
         if (extendSelection) {
+            nextSelectedArea = [selection selectionByResizingInDirection:direction];
+            
             [newSelectedAreas removeLastObject];
-            [newSelectedAreas addObject:[currentArea areaByResizingInDirection:direction]];
+            [newSelectedAreas addObject:nextSelectedArea];
         } else {
+            nextSelectedArea = [selection selectionByMovingInDirection:direction];
+
             [newSelectedAreas removeAllObjects];
-            [newSelectedAreas addObject:[currentArea areaByMovingInDirection:direction]];
+            [newSelectedAreas addObject:nextSelectedArea];
         }
         
         self.selectedAreas = newSelectedAreas;
         
-        [self scrollToArea:nextSelectedArea animate:YES];
+        // FIXME: we should have nextSelectedArea suggest the scroll-to area
+        [self scrollToArea:nextSelectedArea.gridArea animate:YES];
     }
 }
 
@@ -595,8 +603,8 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         
         if (_showsSelection) {
             BOOL isSelected = NO;
-            for (LIGridArea *selectedArea in self.selectedAreas) {
-                if ([drawingArea intersectsArea:selectedArea]) {
+            for (LIGridSelection *selection in self.selectedAreas) {
+                if ([drawingArea intersectsArea:selection.gridArea]) {
                     isSelected = YES;
                     break;
                 }

@@ -11,23 +11,17 @@
 using namespace li::grid;
 using namespace li::geom;
 
-void grid::clear() {
-    rows.clear();
-    cols.clear();
-    fixed.clear();
-}
-
-// returns true if either the grids row or column spans are empty
-
 bool grid::empty() const {
     return rows.empty() || cols.empty();
 }
 
-void grid::reserve_rows(int_t nrows) {
-    rows.reserve(nrows*2 + 1);
-}
-void grid::reserve_cols(int_t ncols) {
-    cols.reserve(ncols*2 + 1);
+#pragma mark -
+#pragma mark Construction
+
+void grid::clear() {
+    rows.clear();
+    cols.clear();
+    fixed.clear();
 }
 
 // returns true if index is a cell span index
@@ -70,6 +64,14 @@ static void push_divider(span_list& spans, float size) {
     spans.push_back(span(max, size));
 }
 
+
+void grid::reserve_rows(int_t nrows) {
+    rows.reserve(nrows*2 + 1);
+}
+void grid::reserve_cols(int_t ncols) {
+    cols.reserve(ncols*2 + 1);
+}
+
 // pushes a row of height size onto the row span list
 
 void grid::push_row(float size) {
@@ -99,6 +101,9 @@ void grid::push_col_divider(float size) {
 void grid::push_fixed(const area& area, __strong id obj) {
     fixed[area] = obj;
 }
+
+#pragma mark -
+#pragma mark Grid Layout
 
 // returns true if value exists within the given span list, and populates index with the index of
 // the span that contains value. if match_nearest is true then the nearest matching index is returned.
@@ -276,6 +281,9 @@ bool grid::get_cell_coord(int_t& row_index, int_t& col_index, const point& p) {
     
     return false;
 }
+
+#pragma mark -
+#pragma mark Grid Drawing
 
 void grid::visit_row_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const {
     interval row_span_interval, col_span_interval;

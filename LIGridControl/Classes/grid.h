@@ -155,12 +155,9 @@ namespace li {
             }
         };
         
-        // area is a grid slice, expressed as a range of row and column *cells* within a grid.
-        // note that this is a row of cells, and not dividers, so indexes into the underlying grid
-        // are all at 2x+1 offset into their respective row and column span lists.
+        // area is a range of row and column cells within a grid.
         
-        class area {
-        public:
+        struct area {
             interval rows, cols;
             
             area() : rows(0), cols(0) {}
@@ -192,16 +189,17 @@ namespace li {
         // objects that distinguish them from each other.
         
         class grid {
-            area_map  fixed;
+            area_map fixed;
             span_list rows, cols;
             
         public:
             grid() {}
 
-            void clear();
             bool empty() const;
+
+            // construction
+            void clear();
             
-            // call reserve..() prior to pushing rows and columns for better performance
             void reserve_rows(int_t nrows);
             void reserve_cols(int_t ncols);
             
@@ -213,6 +211,7 @@ namespace li {
 
             void push_fixed(const area& fixed, __strong id obj);
 
+            // grid layout
             int_t get_row_count() const { return rows.size(); }
             int_t get_col_count() const { return cols.size(); }
             
@@ -235,6 +234,7 @@ namespace li {
             rect get_span_interval_rect(const interval& row_span_interval, const interval& col_span_interval) const;
             void get_span_intervals(interval& row_span_interval, interval& col_span_interval, const rect& rect) const;
 
+            // grid drawing
             void visit_row_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const;
             void visit_col_dividers(const rect& rect, std::function<void(int_t, const struct rect&)>visitor) const;
 
