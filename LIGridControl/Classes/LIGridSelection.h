@@ -25,6 +25,11 @@ typedef enum {
 } LIDirection;
 
 #pragma mark -
+#pragma mark Editing
+
+- (LIGridArea *)editingArea;
+
+#pragma mark -
 #pragma mark Selection Movement
 
 - (LIGridSelection *)selectionByMovingInDirection:(LIDirection)direction;

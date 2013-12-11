@@ -112,7 +112,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
             
             if (selectedAreas.count == 1) {
                 if ([[keyEvent characters] rangeOfCharacterFromSet:editChars].location != NSNotFound) {
-                    [weakSelf editArea:selectedAreas.lastObject];
+                    LIGridSelection *selection = selectedAreas.lastObject;
+                    
+                    [weakSelf editArea:selection.editingArea];
                     [weakSelf.currentEditor insertText:keyEvent.characters];
                     
                     return YES;
@@ -273,8 +275,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         [self scrollToArea:selection.gridArea animate:YES];
         
         if ([[selectedAreas valueForKey:@"gridArea"] containsObject:selection.gridArea]) {
-            // FIXME: check whether the selection grid area represents a single cell
-            [self editArea:selection.gridArea];
+            [self editArea:selection.editingArea];
             
         } else {
             if (theEvent.modifierFlags & NSShiftKeyMask) {
@@ -375,7 +376,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     editingCell = (_delegateWillDrawCellForArea) ? [self.delegate gridControl:self willDrawCell:(id)editingCell forArea:area] : editingCell;
     
     if (editingCell.isEditable || editingCell.isSelectable) {
-        self.selectedAreas = @[area];
+        self.selectedAreas = @[self.selectedAreas.lastObject];
         [self scrollToArea:area animate:NO];
         
         self.editingArea = area;
@@ -478,10 +479,10 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         [self performSelector:commandSelector withObject:self];
 #pragma clang diagnostic pop
         
-        LIGridArea *nextArea = self.selectedAreas.lastObject;
+        LIGridSelection *nextSelection = self.selectedAreas.lastObject;
         
-        if (![nextArea isEqual:previousArea]) {
-            [self editArea:nextArea];
+        if (![nextSelection.editingArea isEqual:previousArea]) {
+            [self editArea:nextSelection.editingArea];
         }
         
         return YES;

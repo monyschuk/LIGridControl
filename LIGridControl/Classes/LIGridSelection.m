@@ -25,10 +25,17 @@
         _column = column;
         _gridControl = gridControl;
         
-        _initialArea = [gridControl areaAtRow:_row column:_column];
+        _initialArea = [gridControl areaAtRow:row column:column];
         _gridArea    = [_initialArea copy];
     }
     return self;
+}
+
+#pragma mark -
+#pragma mark Editing
+
+- (LIGridArea *)editingArea {
+    return [_gridArea isEqual:_initialArea] ? _initialArea : nil;
 }
 
 #pragma mark -
@@ -36,7 +43,7 @@
 
 - (LIGridSelection *)selectionByMovingInDirection:(LIDirection)direction {
     NSInteger dRows = 0, dCols = 0;
-    NSUInteger nextRow = self.row, nextCol = self.column;
+    NSInteger nextRow = self.row, nextCol = self.column;
 
     switch (direction) {
         case LIDirection_Up:
@@ -53,15 +60,22 @@
             break;
     }
     
-    do {
-        nextRow += dRows;
-        nextCol += dCols;
+    nextRow += dRows;
+    nextCol += dCols;
+    
+    while ((nextRow >= 0)
+           && (nextCol >= 0)
+           && (nextRow < self.gridControl.numberOfRows)
+           && (nextCol < self.gridControl.numberOfColumns)) {
 
         LIGridArea *nextArea = [self.gridControl areaAtRow:nextRow column:nextCol];
         if (! [self.gridArea isEqual:nextArea]) {
             return [[LIGridSelection alloc] initWithRow:nextRow column:nextCol gridControl:self.gridControl];
         }
-    } while ((nextRow < self.gridControl.numberOfRows) && (nextCol < self.gridControl.numberOfColumns)); // NOTE: this handles NSUInteger underflow
+
+        nextRow += dRows;
+        nextCol += dCols;
+    }
     
     return self;
 }

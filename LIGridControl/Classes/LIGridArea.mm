@@ -76,7 +76,7 @@ static BOOL rangeIntersectsRange(NSRange range, NSRange otherRange) {
     return r1.intersects(r2);
 }
 - (BOOL)intersectsArea:(LIGridArea *)otherArea {
-    return rangeIntersectsRange(_rowRange, otherArea->_rowRange) && rangeIntersectsRange(_columnRange, otherArea->_columnRange);
+    return otherArea != nil && rangeIntersectsRange(_rowRange, otherArea->_rowRange) && rangeIntersectsRange(_columnRange, otherArea->_columnRange);
 }
 
 - (LIGridArea *)intersectionArea:(LIGridArea *)otherArea {
