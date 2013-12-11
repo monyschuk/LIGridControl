@@ -112,12 +112,13 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
             
             if (selections.count == 1) {
                 if ([[keyEvent characters] rangeOfCharacterFromSet:editChars].location != NSNotFound) {
-                    LIGridSelection *selection = selections.lastObject;
+                    LIGridSelection *selected = selections.lastObject;
                     
-                    [weakSelf editArea:selection.editingArea];
-                    [weakSelf.currentEditor insertText:keyEvent.characters];
-                    
-                    return YES;
+                    if (selected.editingArea) {
+                        [weakSelf editArea:selected.editingArea];
+                        [weakSelf.currentEditor insertText:keyEvent.characters];
+                        return YES;
+                    }
                 }
             }
         }
@@ -275,8 +276,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         [self scrollToArea:selected.gridArea animate:YES];
         
         if ([[selections valueForKey:@"gridArea"] containsObject:selected.gridArea]) {
-            [self editArea:selected.editingArea];
-            
+            if (selected.editingArea) {
+                [self editArea:selected.editingArea];
+            }
         } else {
             if (theEvent.modifierFlags & NSShiftKeyMask) {
                 [selections addObject:selected];
