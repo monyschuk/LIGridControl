@@ -185,8 +185,8 @@ namespace li {
         typedef std::map<area, __strong id> area_map;
         
         // a grid is a series of row, column, and divider spans, as well as what are called fixed areas
-        // that extend across multiple rows and columns and that have associated objective-c
-        // objects that distinguish them from each other.
+        // that may extend across multiple rows and columns and that have associated objective-c
+        // objects to distinguish them from each other.
         
         class grid {
             area_map fixed;

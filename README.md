@@ -73,10 +73,17 @@ License & Notes
 
 LIGridControl is licensed under the MIT license and hosted on GitHub at https://github.com/monyschuk/LIGridControl/. Fork the project and feel free to send pull requests with your changes!
 
-
 TODO
 ----
 
+In my haste to get this out, some larger bits have been left TBD (to be done):
+
+* LISpreadsheetControl with header, footer, and content grids
+* LISpreadsheetControlLayout that orchestrates header, footer, and content grids
+
+Other areas of code that relate to LIGridControl and that need working out include:
+
 * collapsed row and column support
-* header styled subclass of LIGridFieldCell
 * row and column divider dragging and related delegate methods
+* LIGridDividerCell is stubbed, double strokes and dashes need to be implemented
+

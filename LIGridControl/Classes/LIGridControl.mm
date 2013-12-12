@@ -96,7 +96,6 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     
     self.cell = [[LIGridFieldCell alloc] initTextCell:@""];
 
-    
     // default key event handling block
     __weak LIGridControl *weakSelf  = self;
     _keyDownHandler = ^BOOL(NSEvent *keyEvent) {
