@@ -1,13 +1,13 @@
 //
 //  grid.h
-//  LIGridControl
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 12/3/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#ifndef __LIGridControl__grid__
-#define __LIGridControl__grid__
+#ifndef __LIGrid__grid__
+#define __LIGrid__grid__
 
 #include <map>
 #include <cmath>
@@ -242,4 +242,4 @@ namespace li {
         };
     }
 }
-#endif /* defined(__LIGridControl__grid__) */
+#endif /* defined(__LIGrid__grid__) */

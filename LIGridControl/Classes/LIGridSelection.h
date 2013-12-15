@@ -1,6 +1,6 @@
 //
 //  LIGridSelection.h
-//  LIGridControl
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 12/11/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
@@ -8,14 +8,14 @@
 
 #import <Foundation/Foundation.h>
 
-@class LIGridControl, LIGridArea;
+@class LIGrid, LIGridArea;
 @interface LIGridSelection : NSObject
 
-- (id)initWithRow:(NSUInteger)row column:(NSUInteger)column gridControl:(LIGridControl *)gridControl;
+- (id)initWithRow:(NSUInteger)row column:(NSUInteger)column gridControl:(LIGrid *)gridControl;
 
 @property(readonly, nonatomic) NSUInteger row, column;
 @property(readonly, nonatomic, copy) LIGridArea *gridArea;
-@property(readonly, nonatomic, weak) LIGridControl *gridControl;
+@property(readonly, nonatomic, weak) LIGrid *gridControl;
 
 typedef enum {
     LIDirection_Up,

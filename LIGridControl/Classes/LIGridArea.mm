@@ -1,13 +1,13 @@
 //
 //  LIGridArea.m
-//  LIGridControl
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 11/24/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
 #import "LIGridArea.h"
-#import "LIGridControl.h"
+#import "LIGrid.h"
 
 #include "grid.h"
 

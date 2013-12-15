@@ -1,6 +1,6 @@
 //
 //  LIAppDelegate.m
-//  LIGridControl
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 11/18/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
@@ -8,13 +8,13 @@
 
 #import "LIAppDelegate.h"
 
-#import "LIGridControl.h"
+#import "LIGrid.h"
 
 #import "LIGridField.h"
 #import "LIGridDivider.h"
 
-@interface LIAppDelegate () <LIGridControlDataSource, LIGridControlDelegate>
-@property(nonatomic, weak) IBOutlet LIGridControl *gridControl;
+@interface LIAppDelegate () <LIGridDataSource, LIGridDelegate>
+@property(nonatomic, weak) IBOutlet LIGrid *gridControl;
 @property(nonatomic, strong) NSMutableDictionary  *gridValues;
 @end
 
@@ -40,16 +40,16 @@
 }
 
 #pragma mark -
-#pragma mark LIGridControlDataSource
+#pragma mark LIGridDataSource
 
 // lets make this something interesting, like
 // 10 billion cells at 100k rows by 100k columns...
 
 // 100,000 by 100,000
-- (NSUInteger)gridControlNumberOfRows:(LIGridControl *)gridControl {
+- (NSUInteger)gridControlNumberOfRows:(LIGrid *)gridControl {
     return 100000;
 }
-- (NSUInteger)gridControlNumberOfColumns:(LIGridControl *)gridControl {
+- (NSUInteger)gridControlNumberOfColumns:(LIGrid *)gridControl {
     return 100000;
 }
 
@@ -58,39 +58,39 @@
 // copy of the cell, populate it, then get cell size based on the populated cell
 
 // fixed row heights with zero height dividers
-- (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex {
+- (CGFloat)gridControl:(LIGrid *)gridControl heightOfRowAtIndex:(NSUInteger)anIndex {
     return [gridControl.cell cellSizeForBounds:NSMakeRect(0, 0, 1e6, 1e6)].height;
 }
-- (CGFloat)gridControl:(LIGridControl *)gridControl heightOfRowDividerAtIndex:(NSUInteger)anIndex {
+- (CGFloat)gridControl:(LIGrid *)gridControl heightOfRowDividerAtIndex:(NSUInteger)anIndex {
     return 0;
 }
 
 // fixed column width of 72 with alternating column divider widths
-- (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnAtIndex:(NSUInteger)anIndex {
+- (CGFloat)gridControl:(LIGrid *)gridControl widthOfColumnAtIndex:(NSUInteger)anIndex {
     return 72;
 }
-- (CGFloat)gridControl:(LIGridControl *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex {
+- (CGFloat)gridControl:(LIGrid *)gridControl widthOfColumnDividerAtIndex:(NSUInteger)anIndex {
     return (anIndex % 4) ? 0.5 : 2;
 }
 
 // we'll display one fixed area that spans several rows and columns
-- (NSUInteger)gridControlNumberOfFixedAreas:(LIGridControl *)gridControl {
+- (NSUInteger)gridControlNumberOfFixedAreas:(LIGrid *)gridControl {
     return 1;
 }
-- (LIGridArea *)gridControl:(LIGridControl *)gridControl fixedAreaAtIndex:(NSUInteger)index {
+- (LIGridArea *)gridControl:(LIGrid *)gridControl fixedAreaAtIndex:(NSUInteger)index {
     return [[LIGridArea alloc] initWithRowRange:NSMakeRange(5, 5) columnRange:NSMakeRange(2, 2) representedObject:@"foo"];
 }
 
 // in absence of a value, we'll return something just to show, otherwise we check pockets and return what's stored
-- (id)gridControl:(LIGridControl *)gridControl objectValueForArea:(LIGridArea *)coordinate {
+- (id)gridControl:(LIGrid *)gridControl objectValueForArea:(LIGridArea *)coordinate {
     return [self.gridValues objectForKey:coordinate] ? [self.gridValues objectForKey:coordinate] : @(127.5);
 }
-- (void)gridControl:(LIGridControl *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)coordinate {
+- (void)gridControl:(LIGrid *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)coordinate {
     [self.gridValues setObject:objectValue forKey:coordinate];
 }
 
 // we set wrapping and background color of the cell based on the area...
-- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area {
+- (NSCell *)gridControl:(LIGrid *)gridControl willDrawCell:(LIGridFieldCell *)cell forArea:(LIGridArea *)area {
     BOOL wraps = (area.rowRange.length > 1);
     
     [cell setWraps:wraps];
@@ -106,10 +106,10 @@
 }
 
 // we don't do anything special with our row and column dividers, beyond set column divider colors to black...
-- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forRowDividerAtIndex:(NSUInteger)index {
+- (NSCell *)gridControl:(LIGrid *)gridControl willDrawCell:(LIGridDividerCell *)cell forRowDividerAtIndex:(NSUInteger)index {
     return cell;
 }
-- (NSCell *)gridControl:(LIGridControl *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index {
+- (NSCell *)gridControl:(LIGrid *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index {
     cell.dividerColor = [NSColor blackColor];
     return cell;
 }

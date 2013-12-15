@@ -18,7 +18,7 @@
 		4D117772183AC8E30055CEB0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D117751183AC8E30055CEB0 /* Cocoa.framework */; };
 		4D11777A183AC8E30055CEB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4D117778183AC8E30055CEB0 /* InfoPlist.strings */; };
 		4D11777C183AC8E30055CEB0 /* LIGridControlTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */; };
-		4D117788183AC91C0055CEB0 /* LIGridControl.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D117787183AC91C0055CEB0 /* LIGridControl.mm */; };
+		4D117788183AC91C0055CEB0 /* LIGrid.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D117787183AC91C0055CEB0 /* LIGrid.mm */; };
 		4D11778B183AC92B0055CEB0 /* LIGridField.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11778A183AC92B0055CEB0 /* LIGridField.m */; };
 		4D73796A184E9EC9000F3EDB /* grid.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D737968184E9EC9000F3EDB /* grid.mm */; };
 		4D84B8B8184244F60053E6CA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D84B8B7184244F60053E6CA /* QuartzCore.framework */; };
@@ -57,8 +57,8 @@
 		4D117777183AC8E30055CEB0 /* LIGridControlTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LIGridControlTests-Info.plist"; sourceTree = "<group>"; };
 		4D117779183AC8E30055CEB0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LIGridControlTests.m; sourceTree = "<group>"; };
-		4D117786183AC91C0055CEB0 /* LIGridControl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGridControl.h; sourceTree = "<group>"; };
-		4D117787183AC91C0055CEB0 /* LIGridControl.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LIGridControl.mm; sourceTree = "<group>"; };
+		4D117786183AC91C0055CEB0 /* LIGrid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGrid.h; sourceTree = "<group>"; };
+		4D117787183AC91C0055CEB0 /* LIGrid.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LIGrid.mm; sourceTree = "<group>"; };
 		4D117789183AC92B0055CEB0 /* LIGridField.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGridField.h; sourceTree = "<group>"; };
 		4D11778A183AC92B0055CEB0 /* LIGridField.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LIGridField.m; sourceTree = "<group>"; };
 		4D737968184E9EC9000F3EDB /* grid.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = grid.mm; sourceTree = "<group>"; };
@@ -180,6 +180,10 @@
 		4D117785183AC8F40055CEB0 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				4D737969184E9EC9000F3EDB /* grid.h */,
+				4D737968184E9EC9000F3EDB /* grid.mm */,
+				4D117786183AC91C0055CEB0 /* LIGrid.h */,
+				4D117787183AC91C0055CEB0 /* LIGrid.mm */,
 				4DA651A1184278EC006B5791 /* LIGridArea.h */,
 				4DA651A2184278EC006B5791 /* LIGridArea.mm */,
 				4D9A06C918587AD200AB632A /* LIGridSelection.h */,
@@ -188,10 +192,6 @@
 				4D11778A183AC92B0055CEB0 /* LIGridField.m */,
 				4DA6519E184272B7006B5791 /* LIGridDivider.h */,
 				4DA6519F184272B7006B5791 /* LIGridDivider.m */,
-				4D117786183AC91C0055CEB0 /* LIGridControl.h */,
-				4D117787183AC91C0055CEB0 /* LIGridControl.mm */,
-				4D737969184E9EC9000F3EDB /* grid.h */,
-				4D737968184E9EC9000F3EDB /* grid.mm */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -302,7 +302,7 @@
 				4D9A06CB18587AD200AB632A /* LIGridSelection.m in Sources */,
 				4D117765183AC8E30055CEB0 /* LIAppDelegate.m in Sources */,
 				4D11778B183AC92B0055CEB0 /* LIGridField.m in Sources */,
-				4D117788183AC91C0055CEB0 /* LIGridControl.mm in Sources */,
+				4D117788183AC91C0055CEB0 /* LIGrid.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

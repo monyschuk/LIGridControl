@@ -1,6 +1,6 @@
 //
 //  grid.cpp
-//  LIGridControl
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 12/3/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.

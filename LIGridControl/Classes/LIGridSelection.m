@@ -1,6 +1,6 @@
 //
 //  LIGridSelection.m
-//  LIGridControl
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 12/11/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
@@ -9,7 +9,7 @@
 #import "LIGridSelection.h"
 
 #import "LIGridArea.h"
-#import "LIGridControl.h"
+#import "LIGrid.h"
 
 @interface LIGridSelection()
 @property(readwrite, nonatomic, copy) LIGridArea *gridArea;
@@ -19,7 +19,7 @@
 
 @implementation LIGridSelection
 
-- (id)initWithRow:(NSUInteger)row column:(NSUInteger)column gridControl:(LIGridControl *)gridControl {
+- (id)initWithRow:(NSUInteger)row column:(NSUInteger)column gridControl:(LIGrid *)gridControl {
     if ((self = [super init])) {
         _row = row;
         _column = column;

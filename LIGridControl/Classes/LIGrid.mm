@@ -1,12 +1,12 @@
 //
-//  LIGridControl.m
-//  LIGridControl
+//  LIGrid.m
+//  LIGrid
 //
 //  Created by Mark Onyschuk on 11/18/2013.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import "LIGridControl.h"
+#import "LIGrid.h"
 
 #import "LIGridArea.h"
 #import "LIGridSelection.h"
@@ -48,7 +48,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 //
 //
 
-@interface LIGridControl() {
+@interface LIGrid() {
     grid _grid;
     
     BOOL _delegateWillDrawCellForArea;
@@ -62,7 +62,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 
 @end
 
-@implementation LIGridControl
+@implementation LIGrid
 
 + (Class)cellClass {
     return [LIGridFieldCell class];
@@ -97,7 +97,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     self.cell = [[LIGridFieldCell alloc] initTextCell:@""];
 
     // default key event handling block
-    __weak LIGridControl *weakSelf  = self;
+    __weak LIGrid *weakSelf  = self;
     _keyDownHandler = ^BOOL(NSEvent *keyEvent) {
         if ([keyEvent.characters isEqualToString:@"="]) {
             [weakSelf doCommandBySelector:@selector(insertFunction:)];
@@ -132,7 +132,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 #pragma mark -
 #pragma mark Delegate & Data Source
 
-- (void)setDelegate:(id<LIGridControlDelegate>)delegate {
+- (void)setDelegate:(id<LIGridDelegate>)delegate {
     if (_delegate != delegate) {
         NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
  
@@ -162,7 +162,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         _delegateWillDrawCellForColumnDivider = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forColumnDividerAtIndex:)];
     }
 }
-- (void)setDataSource:(id<LIGridControlDataSource>)dataSource {
+- (void)setDataSource:(id<LIGridDataSource>)dataSource {
     if (_dataSource != dataSource) {
         _dataSource = dataSource;
     }
