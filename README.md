@@ -71,7 +71,7 @@ Please refer to LIGrid.mm for the most recent implementation of the key handler 
 License & Notes
 ---------------
 
-LIGrid is licensed under the MIT license and hosted on GitHub at https://github.com/monyschuk/LIGrid/. Fork the project and feel free to send pull requests with your changes!
+LIGrid is licensed under the MIT license and hosted on GitHub at https://github.com/monyschuk/LIGridControl/. Fork the project and feel free to send pull requests with your changes!
 
 TODO
 ----
