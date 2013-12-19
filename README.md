@@ -37,6 +37,15 @@ Objective C classes in the project implemenet grid visuals and event handling:
 
 - **LIGridFieldCell**, **LIGridDividerCell** - cells used to display grid cell data and dividers. If you want to change the look of LIGrid, these are the classes you need to work with or possibly subclass. Associated NSControls for each are included in the project mostly as a convenience - you may want to display a cell or divider outside of a grid (in an inspector, for example) and these controls are how you do it. 
 
+NSCells vs. NSViews
+-------------------
+
+LIGridControl is an evolution of some working code in an as-yet unreleased Mac app. The original rationale for the project was to experiment with creating a view-based grid versus the original grid's cell-based display.
+
+After profiling, I found that NSViews were too heavy for the sort of work LIGridControl was trying to do - window zooming in particular felt far too heavy. I've reverted to my NSCell based implementation and repurposed LIGridControl as a cleanup of my original grid code. Layout and display - expressed as C++ and Objective C classes - are now properly separated.
+
+Eventually grid will move to iOS where an analog of NSCell doesn't exist. LIGridControl's C++ layout classes will be used in the iOS port with UIView-based "cells." In the iOS world at least, window zooming isn't a problem.
+
 Key Event Handling
 ------------------
 
