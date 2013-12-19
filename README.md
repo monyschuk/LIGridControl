@@ -8,13 +8,6 @@ Features
 
 LIGrid is an alternative to NSTableView that provides more efficient support for variable sized rows and columns, extensive support for grid layout and styling, and keyboard control familiar to spreadsheet users.
 
-NOTE
-----
-
-Work relating to LITable, a grid with row and column headers and an associated layout object, will shortly appear in a branch called 'feature/table' prior to being moved into 'master.' 
-
-Also, my principal motivation in opensourcing this class was to get feedback and fixes from others who need this sort of control. If you spot anything that's broken, or if you find something that's implemented poorly, please feel free to fork and submit a pull request. This code will eventually make its way into some commercial software and I'd like as many eyes on it as I can find. If you'd like to contact me directly about this code, email me at mark.onyschuk@gmail.com or find me on Skype at monyschuk.
-
 Classes
 -------
 
@@ -85,12 +78,19 @@ TODO
 
 In my haste to get this out, some larger bits have been left TBD (to be done):
 
-* LISpreadsheetControl with header, footer, and content grids
-* LISpreadsheetControlLayout that orchestrates header, footer, and content grids
+* LITable with header, footer, and content grids
+* LITableLayout that orchestrates header, footer, and content grids
 
 Other areas of code that relate to LIGrid and that need working out include:
 
 * collapsed row and column support
 * row and column divider dragging and related delegate methods
 * LIGridDividerCell is stubbed, double strokes and dashes need to be implemented
+
+NOTE
+----
+
+Work relating to LITable - a view containing a grid, row and column headers, and an associated layout object - will shortly appear in a branch called 'feature/table' prior to being moved into 'master.' Please check back to see any work on that branch.
+
+Also, pleae note that my principal motivation in opensourcing this class was to get feedback and fixes from others who need this sort of control. If you find this code useful but spot anything that's broken, or if you find something that's implemented poorly, please feel free to fork and submit a pull request. This code will eventually make its way into some commercial software and I'd like as many eyes on it as I can find. If you'd like to contact me directly about this code, email me at mark.onyschuk@gmail.com or find me on Skype at monyschuk.
 
