@@ -38,7 +38,7 @@ Objective C classes in the project implement grid visuals and event handling:
 - **LIGridFieldCell**, **LIGridDividerCell** - cells used to display grid cell data and dividers. If you want to change the look of LIGrid, these are the classes you need to work with or possibly subclass. Associated NSControls for each are included in the project mostly as a convenience - you may want to display a cell or divider outside of a grid (in an inspector, for example) and these controls are how you do it. 
 
 
-- **LITable** - a collection of LIGrids: a central grid bordered by a row and column header grids. LITable can act either as the documentView, or subview of the documentView of an NSScrollView. LITable floats its row and column headers when they approach the edge of the visible scrolling area.
+- **LITable** - a collection of LIGrids: a central grid bordered by row and column header grids. LITable can act either as the documentView, or subview of the documentView of an NSScrollView. LITable floats its row and column headers when they approach the edge of the visible scrolling area.
 
 - **LIShadow** - a drop shadow used to border LITable row and column headers.
 
