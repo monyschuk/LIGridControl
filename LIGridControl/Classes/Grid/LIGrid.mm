@@ -205,6 +205,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     }
     
     [self invalidateIntrinsicContentSize];
+    [self setNeedsDisplay:YES];
 }
 
 

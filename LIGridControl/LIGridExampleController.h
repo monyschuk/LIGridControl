@@ -10,7 +10,9 @@
 
 @interface LIGridExampleController : NSObject <LIGridDataSource, LIGridDelegate>
 
-@property(nonatomic, weak) IBOutlet LIGrid *gridControl;
+@property(nonatomic, weak) IBOutlet NSScrollView *scrollView;
+
+@property(nonatomic, strong) LIGrid *gridControl;
 @property(nonatomic, strong) NSMutableDictionary  *gridValues;
 
 @end

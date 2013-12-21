@@ -10,4 +10,6 @@
 
 @interface LITableExampleController : NSObject
 
+@property(nonatomic, weak) IBOutlet NSScrollView *scrollView;
+
 @end

@@ -18,6 +18,10 @@
     [super awakeFromNib];
     
     self.gridValues = @{}.mutableCopy;
+    self.gridControl = [[LIGrid alloc] initWithFrame:NSZeroRect];
+
+    [self.scrollView setDocumentView:self.gridControl];
+    
     [self.gridControl setDelegate:self];
     [self.gridControl setDataSource:self];
     
