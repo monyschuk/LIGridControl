@@ -37,6 +37,11 @@ Objective C classes in the project implemenet grid visuals and event handling:
 
 - **LIGridFieldCell**, **LIGridDividerCell** - cells used to display grid cell data and dividers. If you want to change the look of LIGrid, these are the classes you need to work with or possibly subclass. Associated NSControls for each are included in the project mostly as a convenience - you may want to display a cell or divider outside of a grid (in an inspector, for example) and these controls are how you do it. 
 
+
+- **LITable** - a collection of LIGrids: a central grid bordered by a row and column header grids. LITable can act either as the documentView, or subview of the documentView of an NSScrollView. LITable floats its row and column headers when they approach the edge of the visible scrolling area.
+
+- **LIShadow** - a drop shadow used to border LITable row and column headers.
+
 NSCells vs. NSViews
 -------------------
 
@@ -87,11 +92,12 @@ TODO
 
 In my haste to get this out, some larger bits have been left TBD (to be done):
 
-* LITable with header, footer, and content grids
+* ~~LITable with header, footer, and content grids~~
 * LITableLayout that orchestrates header, footer, and content grids
 
 Other areas of code that relate to LIGrid and that need working out include:
 
+* extended keyboard controls
 * collapsed row and column support
 * row and column divider dragging and related delegate methods
 * LIGridDividerCell is stubbed, double strokes and dashes need to be implemented
@@ -99,7 +105,5 @@ Other areas of code that relate to LIGrid and that need working out include:
 NOTE
 ----
 
-Work relating to LITable - a view containing a grid, row and column headers, and an associated layout object - will shortly appear in a branch called 'feature/table' prior to being moved into 'master.' Please check back to see any work on that branch.
-
-Also, pleae note that my principal motivation in opensourcing this class was to get feedback and fixes from others who need this sort of control. If you find this code useful but spot anything that's broken, or if you find something that's implemented poorly, please feel free to fork and submit a pull request. This code will eventually make its way into some commercial software and I'd like as many eyes on it as I can find. If you'd like to contact me directly about this code, email me at mark.onyschuk@gmail.com or find me on Skype at monyschuk.
+Please note that my principal motivation in opensourcing this class was to get feedback and fixes from others who need this sort of control. If you find this code useful but spot anything that's broken, or if you find something that's implemented poorly, please feel free to fork and submit a pull request. This code will eventually make its way into some commercial software and I'd like as many eyes on it as I can find. If you'd like to contact me directly about this code, email me at mark.onyschuk@gmail.com or find me on Skype at monyschuk.
 
