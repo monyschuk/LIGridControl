@@ -313,7 +313,6 @@
     }
     else {
         return color;
-//        return [NSColor colorWithCalibratedRed:0.584 green:0.722 blue:0.955 alpha:1.000];
     }
 }
 
