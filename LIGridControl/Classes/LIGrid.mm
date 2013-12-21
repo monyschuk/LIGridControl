@@ -124,6 +124,8 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         return NO;
     };
 
+    [self setTranslatesAutoresizingMaskIntoConstraints:NO];
+    
     [self setWantsLayer:YES];
     [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawBeforeViewResize];
 }
