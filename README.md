@@ -27,7 +27,7 @@ C++ classes in the project live in the **li::** namespace and include:
 
 - **grid::grid** - a grid layout which stores row, column, and divider sizes. grid also stores fixed grid areas to represent cells that have been joined together and that are tagged with associated Objective C objects. grid is our layout kernel.
 
-Objective C classes in the project implemenet grid visuals and event handling:
+Objective C classes in the project implement grid visuals and event handling:
 
 - **LIGrid** - a grid of cells and dividers. In a spreadsheet style layout, LIGrid is used to represent both the spreadsheet proper and its associated row and column headers. LIGrid defines both a data source and delegate protocol used to populate grid data and modify how that data is displayed within the grid.
 
