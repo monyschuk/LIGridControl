@@ -6,9 +6,12 @@
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#import "LIGrid.h"
 
-@interface LITableExampleController : NSObject
+@class LITable;
+@interface LITableExampleController : NSObject <LIGridDataSource, LIGridDelegate>
+
+@property(nonatomic, strong) LITable *table;
 
 @property(nonatomic, weak) IBOutlet NSScrollView *scrollView;
 

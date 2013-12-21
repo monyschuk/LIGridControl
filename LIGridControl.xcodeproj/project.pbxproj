@@ -11,7 +11,6 @@
 		4D11775C183AC8E30055CEB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4D11775A183AC8E30055CEB0 /* InfoPlist.strings */; };
 		4D11775E183AC8E30055CEB0 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11775D183AC8E30055CEB0 /* main.m */; };
 		4D117762183AC8E30055CEB0 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 4D117760183AC8E30055CEB0 /* Credits.rtf */; };
-		4D117765183AC8E30055CEB0 /* LIAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D117764183AC8E30055CEB0 /* LIAppDelegate.m */; };
 		4D117768183AC8E30055CEB0 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4D117766183AC8E30055CEB0 /* MainMenu.xib */; };
 		4D11776A183AC8E30055CEB0 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D117769183AC8E30055CEB0 /* Images.xcassets */; };
 		4D117771183AC8E30055CEB0 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D117770183AC8E30055CEB0 /* XCTest.framework */; };
@@ -19,6 +18,7 @@
 		4D11777A183AC8E30055CEB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4D117778183AC8E30055CEB0 /* InfoPlist.strings */; };
 		4D11777C183AC8E30055CEB0 /* LIGridControlTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */; };
 		4D84B8B8184244F60053E6CA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D84B8B7184244F60053E6CA /* QuartzCore.framework */; };
+		4DBC52ED186625D300C23B8E /* LIDocumentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DBC52EC186625D300C23B8E /* LIDocumentView.m */; };
 		4DC128021865CC5200420C9C /* grid.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DC127F21865CC5200420C9C /* grid.mm */; };
 		4DC128031865CC5200420C9C /* LIGrid.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DC127F41865CC5200420C9C /* LIGrid.mm */; };
 		4DC128041865CC5200420C9C /* LIGridArea.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DC127F61865CC5200420C9C /* LIGridArea.mm */; };
@@ -52,8 +52,6 @@
 		4D11775D183AC8E30055CEB0 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		4D11775F183AC8E30055CEB0 /* LIGridControl-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "LIGridControl-Prefix.pch"; sourceTree = "<group>"; };
 		4D117761183AC8E30055CEB0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; name = en; path = en.lproj/Credits.rtf; sourceTree = "<group>"; };
-		4D117763183AC8E30055CEB0 /* LIAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LIAppDelegate.h; sourceTree = "<group>"; };
-		4D117764183AC8E30055CEB0 /* LIAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LIAppDelegate.m; sourceTree = "<group>"; };
 		4D117767183AC8E30055CEB0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
 		4D117769183AC8E30055CEB0 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		4D11776F183AC8E30055CEB0 /* LIGridControlTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LIGridControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -62,6 +60,8 @@
 		4D117779183AC8E30055CEB0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LIGridControlTests.m; sourceTree = "<group>"; };
 		4D84B8B7184244F60053E6CA /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		4DBC52EB186625D300C23B8E /* LIDocumentView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LIDocumentView.h; path = LIGridControl/LIDocumentView.h; sourceTree = SOURCE_ROOT; };
+		4DBC52EC186625D300C23B8E /* LIDocumentView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LIDocumentView.m; path = LIGridControl/LIDocumentView.m; sourceTree = SOURCE_ROOT; };
 		4DC127F11865CC5200420C9C /* grid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = grid.h; sourceTree = "<group>"; };
 		4DC127F21865CC5200420C9C /* grid.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = grid.mm; sourceTree = "<group>"; };
 		4DC127F31865CC5200420C9C /* LIGrid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIGrid.h; sourceTree = "<group>"; };
@@ -150,8 +150,8 @@
 			isa = PBXGroup;
 			children = (
 				4DC127EF1865CC5200420C9C /* Classes */,
-				4D117763183AC8E30055CEB0 /* LIAppDelegate.h */,
-				4D117764183AC8E30055CEB0 /* LIAppDelegate.m */,
+				4DBC52EB186625D300C23B8E /* LIDocumentView.h */,
+				4DBC52EC186625D300C23B8E /* LIDocumentView.m */,
 				4DC1280D1865CD4400420C9C /* LIGridExampleController.h */,
 				4DC1280E1865CD4400420C9C /* LIGridExampleController.m */,
 				4DC128101865CD5400420C9C /* LITableExampleController.h */,
@@ -337,11 +337,11 @@
 				4DC128021865CC5200420C9C /* grid.mm in Sources */,
 				4DC1280F1865CD4400420C9C /* LIGridExampleController.m in Sources */,
 				4D11775E183AC8E30055CEB0 /* main.m in Sources */,
+				4DBC52ED186625D300C23B8E /* LIDocumentView.m in Sources */,
 				4DC128081865CC5200420C9C /* LIShadow.m in Sources */,
 				4DC128041865CC5200420C9C /* LIGridArea.mm in Sources */,
 				4DC128071865CC5200420C9C /* LIGridSelection.m in Sources */,
 				4DC128061865CC5200420C9C /* LIGridField.m in Sources */,
-				4D117765183AC8E30055CEB0 /* LIAppDelegate.m in Sources */,
 				4DC128091865CC5200420C9C /* LITable.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

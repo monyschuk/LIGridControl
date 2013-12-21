@@ -17,6 +17,7 @@ typedef enum {
 
 @interface LIShadow : NSView
 
+@property(nonatomic, copy) NSColor *shadowColor;
 @property(nonatomic) LIShadowDirection shadowDirection;
 
 @end

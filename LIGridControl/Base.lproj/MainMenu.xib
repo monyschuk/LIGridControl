@@ -4,11 +4,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
-            <connections>
-                <outlet property="delegate" destination="494" id="495"/>
-            </connections>
-        </customObject>
+        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
         <menu title="AMainMenu" systemMenu="main" id="29">
@@ -732,12 +728,6 @@
                 <outlet property="delegate" destination="HZv-Zj-f3U" id="9Ud-HI-EbM"/>
             </connections>
         </window>
-        <customObject id="494" customClass="LIAppDelegate">
-            <connections>
-                <outlet property="gridControl" destination="FPe-IS-DPX" id="W9B-AV-EkU"/>
-                <outlet property="window" destination="371" id="532"/>
-            </connections>
-        </customObject>
         <customObject id="420" customClass="NSFontManager"/>
         <customObject id="HZv-Zj-f3U" customClass="LIGridExampleController">
             <connections>

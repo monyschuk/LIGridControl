@@ -31,6 +31,13 @@
 #pragma mark -
 #pragma mark Properties
 
+- (void)setShadowColor:(NSColor *)shadowColor {
+    if (_shadowColor != shadowColor) {
+        _shadowColor = [shadowColor copy];
+        [self setNeedsDisplay:YES];
+    }
+}
+
 - (void)setShadowDirection:(LIShadowDirection)shadowDirection {
     if (_shadowDirection != shadowDirection) {
         _shadowDirection = shadowDirection;
@@ -57,7 +64,7 @@
     if (gradient == nil) {
         gradient = [CAGradientLayer layer];
         
-        NSColor *fromColor = [NSColor colorWithCalibratedWhite:0 alpha:0.25];
+        NSColor *fromColor = self.shadowColor ? self.shadowColor : [NSColor colorWithCalibratedWhite:0 alpha:0.25];
         NSColor *toColor   = [NSColor colorWithCalibratedWhite:0 alpha:0.00];
         
         [gradient setColors:@[(id)fromColor.CGColor, (id)toColor.CGColor]];
@@ -75,6 +82,11 @@
 
 - (void)updateGradientInRect:(NSRect)frameRect {
     [gradient setFrame:frameRect];
+    
+    NSColor *fromColor = self.shadowColor ? self.shadowColor : [NSColor colorWithCalibratedWhite:0 alpha:0.15];
+    NSColor *toColor   = [NSColor colorWithCalibratedWhite:0 alpha:0.00];
+
+    [gradient setColors:@[(id)fromColor.CGColor, (id)toColor.CGColor]];
     
     switch (self.shadowDirection) {
         case LIShadowDirection_Up:

@@ -9,10 +9,10 @@
 #import "LITable.h"
 
 #import "LIGrid.h"
+#import "LIShadow.h"
 
 @implementation LITable {
     NSArray *_constraints;
-    NSLayoutConstraint *_topConstraint, *_leftConstraint, *_topFloatConstraint, *_leftFloatConstraint;
 }
 
 #pragma mark -
@@ -40,7 +40,26 @@
     _rowHeader      = [[LIGrid alloc] initWithFrame:NSZeroRect];
     _columnHeader   = [[LIGrid alloc] initWithFrame:NSZeroRect];
     
-    [self setSubviews:@[_grid, _rowHeader, _columnHeader]];
+    _rowShadow      = [[LIShadow alloc] initWithFrame:NSZeroRect];
+    _columnShadow   = [[LIShadow alloc] initWithFrame:NSZeroRect];
+    
+    [_rowShadow setShadowDirection:LIShadowDirection_Right];
+    
+    [_rowShadow addConstraint:
+     [NSLayoutConstraint constraintWithItem:_rowShadow attribute:NSLayoutAttributeWidth
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:nil attribute:NSLayoutAttributeNotAnAttribute
+                                 multiplier:1 constant:8]];
+
+    [_columnShadow setShadowDirection:LIShadowDirection_Down];
+    
+    [_columnShadow addConstraint:
+     [NSLayoutConstraint constraintWithItem:_columnShadow attribute:NSLayoutAttributeHeight
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:nil attribute:NSLayoutAttributeNotAnAttribute
+                                 multiplier:1 constant:8]];
+
+    [self setSubviews:@[_grid, _rowHeader, _rowShadow, _columnHeader, _columnShadow]];
     [self setNeedsUpdateConstraints:YES];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -98,6 +117,9 @@
 }
 
 - (void)clipViewBoundsDidChange:(NSNotification *)notification {
+    [_rowShadow setHidden:[self rowHeaderFloatOffset] < 0.1];
+    [_columnShadow setHidden:[self columnHeaderFloatOffset] < 0.1];
+    
     [self setNeedsUpdateConstraints:YES];
 }
 
@@ -137,54 +159,64 @@
 - (void)updateConstraints {
     [super updateConstraints];
     
-    if (_topConstraint == nil) {
-        NSMutableArray  *constraints  = @[].mutableCopy;
-        NSDictionary    *subviews     = NSDictionaryOfVariableBindings(_grid, _rowHeader, _columnHeader);
-        
-        NSDictionary    *metrics      = @{@"top":       @(NSHeight(self.columnHeader.frame)),
-                                          @"left":      @(NSWidth(self.rowHeader.frame)),
-                                          @"topFloat":  @([self columnHeaderFloatOffset]),
-                                          @"leftFloat": @([self rowHeaderFloatOffset])};
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(left)-[_grid]|"
-                                                 options:0
-                                                 metrics:metrics
-                                                   views:subviews]];
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(top)-[_grid]|"
-                                                 options:0
-                                                 metrics:metrics
-                                                   views:subviews]];
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(leftFloat)-[_rowHeader]"
-                                                 options:0
-                                                 metrics:metrics
-                                                   views:subviews]];
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(topFloat)-[_columnHeader]"
-                                                 options:0
-                                                 metrics:metrics
-                                                   views:subviews]];
-        
-        [constraints addObject:
-         [NSLayoutConstraint constraintWithItem:_rowHeader attribute:NSLayoutAttributeTop
-                                      relatedBy:NSLayoutRelationEqual
-                                         toItem:_grid attribute:NSLayoutAttributeTop
-                                     multiplier:1 constant:0]];
-        [constraints addObject:
-         [NSLayoutConstraint constraintWithItem:_columnHeader attribute:NSLayoutAttributeLeft
-                                      relatedBy:NSLayoutRelationEqual
-                                         toItem:_grid attribute:NSLayoutAttributeLeft
-                                     multiplier:1 constant:0]];
-        
-        // replace constraints
-        [self removeConstraints:_constraints ? _constraints : @[]];
-        [self addConstraints:constraints];
-        _constraints = constraints;
-    }
+    NSMutableArray  *constraints  = @[].mutableCopy;
+    NSDictionary    *subviews     = NSDictionaryOfVariableBindings(_grid, _rowHeader, _columnHeader, _rowShadow, _columnShadow);
+    
+    NSDictionary    *metrics      = @{@"top":       @(NSHeight(self.columnHeader.frame)),
+                                      @"left":      @(NSWidth(self.rowHeader.frame)),
+                                      @"topFloat":  @([self columnHeaderFloatOffset]),
+                                      @"leftFloat": @([self rowHeaderFloatOffset])};
+    
+    [constraints addObjectsFromArray:
+     [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(left)-[_grid]|"
+                                             options:0
+                                             metrics:metrics
+                                               views:subviews]];
+    
+    [constraints addObjectsFromArray:
+     [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(top)-[_grid]|"
+                                             options:0
+                                             metrics:metrics
+                                               views:subviews]];
+    
+    [constraints addObjectsFromArray:
+     [NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(leftFloat)-[_rowHeader]"
+                                             options:0
+                                             metrics:metrics
+                                               views:subviews]];
+    [constraints addObjectsFromArray:
+     [NSLayoutConstraint constraintsWithVisualFormat:@"V:|-(topFloat)-[_columnHeader]"
+                                             options:0
+                                             metrics:metrics
+                                               views:subviews]];
+    
+    [constraints addObjectsFromArray:
+     [NSLayoutConstraint constraintsWithVisualFormat:@"H:[_rowHeader][_rowShadow]"
+                                             options:NSLayoutFormatAlignAllTop|NSLayoutFormatAlignAllBottom
+                                             metrics:metrics
+                                               views:subviews]];
+    
+    [constraints addObjectsFromArray:
+     [NSLayoutConstraint constraintsWithVisualFormat:@"V:[_columnHeader][_columnShadow]"
+                                             options:NSLayoutFormatAlignAllLeft|NSLayoutFormatAlignAllRight
+                                             metrics:metrics
+                                               views:subviews]];
+
+    [constraints addObject:
+     [NSLayoutConstraint constraintWithItem:_rowHeader attribute:NSLayoutAttributeTop
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:_grid attribute:NSLayoutAttributeTop
+                                 multiplier:1 constant:0]];
+    [constraints addObject:
+     [NSLayoutConstraint constraintWithItem:_columnHeader attribute:NSLayoutAttributeLeft
+                                  relatedBy:NSLayoutRelationEqual
+                                     toItem:_grid attribute:NSLayoutAttributeLeft
+                                 multiplier:1 constant:0]];
+    
+    // replace constraints
+    [self removeConstraints:_constraints ? _constraints : @[]];
+    [self addConstraints:constraints];
+    _constraints = constraints;
 }
 
 #pragma mark -
