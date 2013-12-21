@@ -4,11 +4,7 @@
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="4514"/>
     </dependencies>
     <objects>
-        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
-            <connections>
-                <outlet property="delegate" destination="494" id="495"/>
-            </connections>
-        </customObject>
+        <customObject id="-2" userLabel="File's Owner" customClass="NSApplication"/>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application"/>
         <menu title="AMainMenu" systemMenu="main" id="29">
@@ -646,8 +642,8 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="LIGridControl" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+        <window title="Grid Example" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371">
+            <windowStyleMask key="styleMask" titled="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="480" height="360"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
@@ -685,13 +681,64 @@
                     <constraint firstAttribute="trailing" secondItem="e9D-3O-JZK" secondAttribute="trailing" id="fbC-CU-ua7"/>
                 </constraints>
             </view>
-        </window>
-        <customObject id="494" customClass="LIAppDelegate">
             <connections>
-                <outlet property="gridControl" destination="FPe-IS-DPX" id="W9B-AV-EkU"/>
-                <outlet property="window" destination="371" id="532"/>
+                <outlet property="delegate" destination="HZv-Zj-f3U" id="Gec-kN-uDs"/>
+            </connections>
+        </window>
+        <window title="Table Example" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="1CU-pR-oDm">
+            <windowStyleMask key="styleMask" titled="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="335" y="390" width="480" height="360"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1178"/>
+            <view key="contentView" wantsLayer="YES" id="IZ0-dO-1in">
+                <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <scrollView borderType="none" autohidesScrollers="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" allowsMagnification="YES" maxMagnification="3" minMagnification="1" translatesAutoresizingMaskIntoConstraints="NO" id="T03-mV-LtW">
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <clipView key="contentView" id="KrX-Pg-llU">
+                            <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                            <subviews>
+                                <view fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5iK-y6-dZe">
+                                    <rect key="frame" x="0.0" y="0.0" width="480" height="360"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                </view>
+                            </subviews>
+                        </clipView>
+                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="C7y-HS-hnm">
+                            <rect key="frame" x="0.0" y="344" width="480" height="16"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                        <scroller key="verticalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="Dbf-HW-YLm">
+                            <rect key="frame" x="464" y="0.0" width="16" height="360"/>
+                            <autoresizingMask key="autoresizingMask"/>
+                        </scroller>
+                    </scrollView>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="T03-mV-LtW" firstAttribute="top" secondItem="IZ0-dO-1in" secondAttribute="top" id="8Sb-nQ-BYG"/>
+                    <constraint firstItem="T03-mV-LtW" firstAttribute="leading" secondItem="IZ0-dO-1in" secondAttribute="leading" id="FtS-GE-u8o"/>
+                    <constraint firstAttribute="trailing" secondItem="T03-mV-LtW" secondAttribute="trailing" id="Ksb-W3-CCV"/>
+                    <constraint firstAttribute="bottom" secondItem="T03-mV-LtW" secondAttribute="bottom" id="pD7-WI-Hze"/>
+                </constraints>
+            </view>
+            <connections>
+                <outlet property="delegate" destination="HZv-Zj-f3U" id="9Ud-HI-EbM"/>
+            </connections>
+        </window>
+        <customObject id="420" customClass="NSFontManager"/>
+        <customObject id="HZv-Zj-f3U" customClass="LIGridExampleController">
+            <connections>
+                <outlet property="gridControl" destination="FPe-IS-DPX" id="CP4-eU-rbq"/>
+                <outlet property="scrollView" destination="e9D-3O-JZK" id="nei-A9-BnV"/>
             </connections>
         </customObject>
-        <customObject id="420" customClass="NSFontManager"/>
+        <customObject id="Lz2-Hf-LkW" customClass="LITableExampleController">
+            <connections>
+                <outlet property="scrollView" destination="T03-mV-LtW" id="fRq-oj-08H"/>
+            </connections>
+        </customObject>
     </objects>
 </document>

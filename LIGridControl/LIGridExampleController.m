@@ -1,27 +1,27 @@
 //
-//  LIAppDelegate.m
-//  LIGrid
+//  LIGridExampleController.m
+//  LIGridControl
 //
-//  Created by Mark Onyschuk on 11/18/2013.
+//  Created by Mark Onyschuk on 2013-12-21.
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import "LIAppDelegate.h"
-
-#import "LIGrid.h"
+#import "LIGridExampleController.h"
 
 #import "LIGridField.h"
 #import "LIGridDivider.h"
 
-@interface LIAppDelegate () <LIGridDataSource, LIGridDelegate>
-@property(nonatomic, weak) IBOutlet LIGrid *gridControl;
-@property(nonatomic, strong) NSMutableDictionary  *gridValues;
-@end
+@implementation LIGridExampleController
 
-@implementation LIAppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    
     self.gridValues = @{}.mutableCopy;
+    self.gridControl = [[LIGrid alloc] initWithFrame:NSZeroRect];
+
+    [self.scrollView setDocumentView:self.gridControl];
+    
     [self.gridControl setDelegate:self];
     [self.gridControl setDataSource:self];
     
@@ -34,6 +34,10 @@
 // this is called by the default key handler
 // associated with the grid control, when someone
 // starts by typing an '=' sign into a selected cell
+
+// NOTE: LIGridExampleController has been made the window
+// delegate in order to insert itself into the responder chain
+// and receive this message.
 
 - (IBAction)insertFunction:(id)sender {
     NSLog(@"%s", __PRETTY_FUNCTION__);
@@ -96,7 +100,7 @@
     [cell setWraps:wraps];
     [cell setScrollable:!wraps];
     [cell setLineBreakMode:!wraps ? NSLineBreakByTruncatingTail : NSLineBreakByWordWrapping];
-
+    
     if (area.representedObject) {
         [cell setBackgroundColor:[[NSColor redColor] blendedColorWithFraction:0.90 ofColor:[NSColor whiteColor]]];
     } else {
