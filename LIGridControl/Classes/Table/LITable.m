@@ -220,6 +220,14 @@
 }
 
 #pragma mark -
+#pragma mark Responsive Scrolling
+
+- (void)prepareContentInRect:(NSRect)rect {
+    if ([self needsUpdateConstraints]) {
+        [self updateConstraintsForSubtreeIfNeeded];
+    }
+}
+#pragma mark -
 #pragma mark Drawing
 
 - (BOOL)isOpaque {

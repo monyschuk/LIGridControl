@@ -22,8 +22,4 @@
     NSRectFill(dirtyRect);
 }
 
-+ (BOOL)isCompatibleWithResponsiveScrolling {
-    return NO; // fixes LITable header flicker...
-}
-
 @end
