@@ -257,9 +257,13 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 #pragma mark Event Handling
 
 - (BOOL)becomeFirstResponder {
+    for (LIGridSelection *selection in _selections) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
+
     return YES;
 }
 - (BOOL)resignFirstResponder {
+    for (LIGridSelection *selection in _selections) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
+
     return YES;
 }
 - (BOOL)acceptsFirstResponder {
