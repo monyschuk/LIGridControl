@@ -40,7 +40,7 @@ Objective C classes in the project implement grid visuals and event handling:
 
 - **LITable** - a collection of LIGrids: a central grid bordered by row and column header grids. LITable can act either as the documentView, or subview of the documentView of an NSScrollView. LITable floats its row and column headers when they approach the edge of the visible scrolling area.
 
-- **LIShadow** - a drop shadow used to border LITable row and column headers.
+- **LIShadow** - a drop shadow used to border floating LITable row and column headers.
 
 NSCells vs. NSViews
 -------------------
