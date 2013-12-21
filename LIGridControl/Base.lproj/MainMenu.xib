@@ -646,7 +646,7 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="LIGridControl" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371">
+        <window title="Grid Example" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="371">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="480" height="360"/>
@@ -685,6 +685,9 @@
                     <constraint firstAttribute="trailing" secondItem="e9D-3O-JZK" secondAttribute="trailing" id="fbC-CU-ua7"/>
                 </constraints>
             </view>
+            <connections>
+                <outlet property="delegate" destination="HZv-Zj-f3U" id="Gec-kN-uDs"/>
+            </connections>
         </window>
         <customObject id="494" customClass="LIAppDelegate">
             <connections>
@@ -693,5 +696,10 @@
             </connections>
         </customObject>
         <customObject id="420" customClass="NSFontManager"/>
+        <customObject id="HZv-Zj-f3U" customClass="LIGridExampleController">
+            <connections>
+                <outlet property="gridControl" destination="FPe-IS-DPX" id="CP4-eU-rbq"/>
+            </connections>
+        </customObject>
     </objects>
 </document>
