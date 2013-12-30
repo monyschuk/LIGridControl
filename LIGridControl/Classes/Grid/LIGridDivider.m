@@ -90,9 +90,7 @@
         p0 = NSMakePoint(NSMinX(frameRect), NSMidY(frameRect));
         p1 = NSMakePoint(NSMaxX(frameRect), NSMidY(frameRect));
     }
-    
-    w = MIN(NSWidth(frameRect), NSHeight(frameRect));
-    
+        
     CGContextRef ctx = [[NSGraphicsContext currentContext] graphicsPort];
     
     CGContextMoveToPoint(ctx, p0.x, p0.y);

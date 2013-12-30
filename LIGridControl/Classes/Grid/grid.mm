@@ -217,7 +217,7 @@ void grid::get_span_intervals(interval& row_span_range, interval& col_span_range
     double cmin = rect.pmin.x;
     double cmax = rect.pmax.x;
     
-    int_t rmin_idx, rmax_idx, cmin_idx, cmax_idx;
+    int_t rmin_idx = 0, rmax_idx = 0, cmin_idx = 0, cmax_idx = 0;
     
     get_span_index(rmin_idx, rows, rmin, true);
     get_span_index(rmax_idx, rows, rmax, true);
