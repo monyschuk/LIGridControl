@@ -10,6 +10,7 @@
 
 #import "LIGrid.h"
 #import "LIShadow.h"
+#import "LITableLayout.h"
 
 @implementation LITable {
     NSArray *_constraints;
@@ -44,14 +45,13 @@
     _columnShadow   = [[LIShadow alloc] initWithFrame:NSZeroRect];
     
     [_rowShadow setShadowDirection:LIShadowDirection_Right];
+    [_columnShadow setShadowDirection:LIShadowDirection_Down];
     
     [_rowShadow addConstraint:
      [NSLayoutConstraint constraintWithItem:_rowShadow attribute:NSLayoutAttributeWidth
                                   relatedBy:NSLayoutRelationEqual
                                      toItem:nil attribute:NSLayoutAttributeNotAnAttribute
                                  multiplier:1 constant:8]];
-
-    [_columnShadow setShadowDirection:LIShadowDirection_Down];
     
     [_columnShadow addConstraint:
      [NSLayoutConstraint constraintWithItem:_columnShadow attribute:NSLayoutAttributeHeight
@@ -151,6 +151,16 @@
     }
 
     return 0;
+}
+
+#pragma mark -
+#pragma mark Layout Manager
+
+- (void)setLayoutManager:(LITableLayout *)layoutManager {
+    if (_layoutManager != layoutManager) {
+        _layoutManager = layoutManager;
+        [_layoutManager awakeInTable:self];
+    }
 }
 
 #pragma mark -

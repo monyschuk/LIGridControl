@@ -8,9 +8,17 @@
 
 #import <Cocoa/Cocoa.h>
 
-@class LIGrid, LIShadow;
+@class LIGrid, LIShadow, LITableLayout;
 
 @interface LITable : NSView
+
+#pragma mark -
+#pragma mark Layout Manager
+
+@property(nonatomic, strong) LITableLayout *layoutManager;
+
+#pragma mark -
+#pragma mark Views
 
 @property(readonly, nonatomic, strong) LIShadow *rowShadow, *columnShadow;
 @property(readonly, nonatomic, strong) LIGrid *grid, *rowHeader, *columnHeader;
