@@ -16,46 +16,46 @@
 
 @implementation LITableLayout
 
-- (void)awakeInTable:(LITable *)table {
-    if (_table != table) {
+- (void)awakeInTableView:(LITable *)tableView {
+    if (_tableView != tableView) {
         
         self.nextResponder = nil;
         
-        _table.grid.delegate = nil;
-        _table.rowHeader.delegate = nil;
-        _table.columnHeader.delegate = nil;
+        _tableView.grid.delegate = nil;
+        _tableView.rowHeader.delegate = nil;
+        _tableView.columnHeader.delegate = nil;
         
-        _table.grid.dataSource = nil;
-        _table.rowHeader.dataSource = nil;
-        _table.columnHeader.dataSource = nil;
+        _tableView.grid.dataSource = nil;
+        _tableView.rowHeader.dataSource = nil;
+        _tableView.columnHeader.dataSource = nil;
 
-        _table.grid.nextResponder = _table;
-        _table.rowHeader.nextResponder = _table;
-        _table.columnHeader.nextResponder = _table;
+        _tableView.grid.nextResponder = _tableView;
+        _tableView.rowHeader.nextResponder = _tableView;
+        _tableView.columnHeader.nextResponder = _tableView;
         
-        _table = table;
+        _tableView = tableView;
         
-        _table.grid.delegate = self;
-        _table.rowHeader.delegate = self;
-        _table.columnHeader.delegate = self;
+        _tableView.grid.delegate = self;
+        _tableView.rowHeader.delegate = self;
+        _tableView.columnHeader.delegate = self;
         
-        _table.grid.dataSource = self;
-        _table.rowHeader.dataSource = self;
-        _table.columnHeader.dataSource = self;
+        _tableView.grid.dataSource = self;
+        _tableView.rowHeader.dataSource = self;
+        _tableView.columnHeader.dataSource = self;
         
-        _table.grid.nextResponder = self;
-        _table.rowHeader.nextResponder = self;
-        _table.columnHeader.nextResponder = self;
+        _tableView.grid.nextResponder = self;
+        _tableView.rowHeader.nextResponder = self;
+        _tableView.columnHeader.nextResponder = self;
         
-        self.nextResponder = _table;
+        self.nextResponder = _tableView;
 
     }
 }
 
 - (void)reloadData {
-    [self.table.columnHeader reloadData];
-    [self.table.rowHeader reloadData];
-    [self.table.grid reloadData];
+    [self.tableView.columnHeader reloadData];
+    [self.tableView.rowHeader reloadData];
+    [self.tableView.grid reloadData];
 }
 
 - (NSUInteger)gridControlNumberOfRows:(LIGrid *)gridControl {

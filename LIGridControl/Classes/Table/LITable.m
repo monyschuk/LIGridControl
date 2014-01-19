@@ -159,7 +159,7 @@
 - (void)setLayoutManager:(LITableLayout *)layoutManager {
     if (_layoutManager != layoutManager) {
         _layoutManager = layoutManager;
-        [_layoutManager awakeInTable:self];
+        [_layoutManager awakeInTableView:self];
     }
 }
 

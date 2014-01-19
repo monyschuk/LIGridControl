@@ -12,10 +12,10 @@
 
 @interface LITableLayout : NSResponder <LIGridDataSource, LIGridDelegate>
 
-- (void)awakeInTable:(LITable *)table;
+- (void)awakeInTableView:(LITable *)table;
 
 - (void)reloadData;
 
-@property(readonly, nonatomic, weak) LITable *table;
+@property(readonly, nonatomic, weak) LITable *tableView;
 
 @end
