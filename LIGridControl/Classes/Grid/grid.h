@@ -212,8 +212,8 @@ namespace li {
             void push_fixed(const area& fixed, __strong id obj);
 
             // grid layout
-            int_t get_row_count() const { return rows.size(); }
-            int_t get_col_count() const { return cols.size(); }
+            int_t get_row_count() const { return rows.size()/2; }
+            int_t get_col_count() const { return cols.size()/2; }
             
             float get_width() const { return cols.empty() ? 0 : cols.back().get_end(); }
             float get_height() const { return rows.empty() ? 0 : rows.back().get_end(); }
