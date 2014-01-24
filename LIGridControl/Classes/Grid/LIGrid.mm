@@ -54,6 +54,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     BOOL _delegateWillDrawCellForArea;
     BOOL _delegateWillDrawCellForRowDivider;
     BOOL _delegateWillDrawCellForColumnDivider;
+    BOOL _delegateControlTextViewDoCommandBySelector;
 }
 
 // properties used during editing
@@ -167,6 +168,8 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         _delegateWillDrawCellForArea = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forArea:)];
         _delegateWillDrawCellForRowDivider = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forRowDividerAtIndex:)];
         _delegateWillDrawCellForColumnDivider = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forColumnDividerAtIndex:)];
+        
+        _delegateControlTextViewDoCommandBySelector = [_delegate respondsToSelector:@selector(control:textView:doCommandBySelector:)];
     }
 }
 - (void)setDataSource:(id<LIGridDataSource>)dataSource {
@@ -313,6 +316,13 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 - (void)keyDown:(NSEvent *)theEvent {
     if (self.keyDownHandler == nil || self.keyDownHandler(theEvent) == NO) {
         [self interpretKeyEvents:@[theEvent]];
+    }
+}
+
+- (void)doCommandBySelector:(SEL)aSelector {
+    if (_delegateControlTextViewDoCommandBySelector == NO
+        || [self.delegate control:self textView:nil doCommandBySelector:aSelector] == NO) {
+        [super doCommandBySelector:aSelector];
     }
 }
 
@@ -478,7 +488,7 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 }
 
 - (BOOL)textView:(NSTextView *)textView doCommandBySelector:(SEL)commandSelector {
-    if ([self.delegate respondsToSelector:@selector(control:textView:doCommandBySelector:)]
+    if (_delegateControlTextViewDoCommandBySelector
         && [self.delegate control:self textView:textView doCommandBySelector:commandSelector]) {
         return YES;
     }
