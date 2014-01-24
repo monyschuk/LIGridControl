@@ -269,4 +269,17 @@ typedef enum {
     return newSelection;
 }
 
+#pragma mark -
+#pragma mark Containment Tests
+
+- (BOOL)containsRow:(NSUInteger)row {
+    return [self containsRow:row column:self.column];
+}
+- (BOOL)containsColumn:(NSUInteger)column {
+    return [self containsRow:self.row column:column];
+}
+- (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column {
+    return [self.gridArea containsRow:row column:column];
+}
+
 @end

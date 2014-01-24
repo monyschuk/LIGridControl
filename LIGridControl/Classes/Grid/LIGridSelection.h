@@ -39,4 +39,11 @@ typedef enum {
 
 - (LIGridSelection *)selectionByResizingInDirection:(LIDirection)direction;
 
+#pragma mark -
+#pragma mark Containment Tests
+
+- (BOOL)containsRow:(NSUInteger)row;
+- (BOOL)containsColumn:(NSUInteger)column;
+- (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column;
+
 @end
