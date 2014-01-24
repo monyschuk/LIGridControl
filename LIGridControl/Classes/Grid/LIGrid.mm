@@ -147,6 +147,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         if ([_delegate respondsToSelector:@selector(controlTextDidEndEditing:)])
             [nc removeObserver:_delegate name:NSControlTextDidEndEditingNotification object:self];
 
+        if ([_delegate respondsToSelector:@selector(gridControlSelectionDidChange:)])
+            [nc removeObserver:_delegate name:LIGridControlSelectionDidChangeNotification object:self];
+        
         _delegate = delegate;
         
         if ([_delegate respondsToSelector:@selector(controlTextDidBeginEditing:)])
@@ -158,6 +161,8 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         if ([_delegate respondsToSelector:@selector(controlTextDidEndEditing:)])
             [nc addObserver:_delegate selector:@selector(controlTextDidEndEditing:) name:NSControlTextDidEndEditingNotification object:self];
 
+        if ([_delegate respondsToSelector:@selector(gridControlSelectionDidChange:)])
+            [nc addObserver:_delegate selector:@selector(gridControlSelectionDidChange:) name:LIGridControlSelectionDidChangeNotification object:self];
         
         _delegateWillDrawCellForArea = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forArea:)];
         _delegateWillDrawCellForRowDivider = [_delegate respondsToSelector:@selector(gridControl:willDrawCell:forRowDividerAtIndex:)];
@@ -246,10 +251,13 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
         // redraw old selection
         for (LIGridSelection *selection in _selections) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
 
-        _selections = [selections copy];
+        _selections = [[NSArray alloc] initWithArray:selections];
         
         // draw new selection...
         for (LIGridSelection *selection in _selections) [self setNeedsDisplayInRect:[self rectForArea:selection.gridArea]];
+        
+        // post notification
+        [[NSNotificationCenter defaultCenter] postNotificationName:LIGridControlSelectionDidChangeNotification object:self];
     }
 }
 
@@ -672,3 +680,4 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 
 @end
 
+NSString* LIGridControlSelectionDidChangeNotification = @"LIGridControlSelectionDidChangeNotification";

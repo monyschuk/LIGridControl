@@ -18,6 +18,8 @@
 - (NSCell *)gridControl:(LIGrid *)gridControl willDrawCell:(LIGridDividerCell *)cell forRowDividerAtIndex:(NSUInteger)index;
 - (NSCell *)gridControl:(LIGrid *)gridControl willDrawCell:(LIGridDividerCell *)cell forColumnDividerAtIndex:(NSUInteger)index;
 
+- (void)gridControlSelectionDidChange:(NSNotification *)notification;
+
 @end
 
 @protocol LIGridDataSource <NSObject>
@@ -103,3 +105,5 @@ typedef BOOL (^LIGridKeyDownHandlerBlock)(NSEvent *keyEvent);
 - (void)insertFunction:(id)sender;
 
 @end
+
+extern NSString* LIGridControlSelectionDidChangeNotification;
