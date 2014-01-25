@@ -265,6 +265,17 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 }
 
 #pragma mark -
+#pragma mark Fixed Areas
+
+- (LIGridArea *)areaWithRepresentedObject:(id)object {
+    area cell_area;
+    if (_grid.get_fixed_area(cell_area, object)) {
+        return [[LIGridArea alloc] initWithRowRange:cell_area.rows columnRange:cell_area.cols representedObject:object];
+    }
+    return nil;
+}
+
+#pragma mark -
 #pragma mark Event Handling
 
 - (BOOL)becomeFirstResponder {

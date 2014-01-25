@@ -66,6 +66,12 @@ typedef BOOL (^LIGridKeyDownHandlerBlock)(NSEvent *keyEvent);
 @property(nonatomic, copy) NSArray *selections;
 
 #pragma mark -
+#pragma mark Fixed Areas
+
+- (LIGridArea *)areaWithRepresentedObject:(id)object;
+
+
+#pragma mark -
 #pragma mark Editing
 
 - (void)editArea:(LIGridArea *)area;

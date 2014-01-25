@@ -149,7 +149,17 @@ static bool get_span_index(int_t& index, const span_list& spans, const double va
     return false;
 }
 
-bool grid::get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const interval& row_interval, const interval& col_interval) {
+bool grid::get_fixed_area(area& cell_area, const __strong id& cell_obj) const {
+    for (auto pair : fixed) {
+        if ([pair.second isEqual:cell_obj]) {
+            cell_area = pair.first;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool grid::get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const interval& row_interval, const interval& col_interval) const {
     bool found = false;
     
     for (auto pair : fixed) {
@@ -233,7 +243,7 @@ void grid::get_span_intervals(interval& row_span_range, interval& col_span_range
 
 // returns by reference the area (and associated object if fixed) at point p
 
-bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const point& p) {
+bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const point& p) const {
     int_t row_idx, col_idx;
 
     return (get_cell_coord(row_idx, col_idx, p)) ? get_cell_area(cell_area, cell_obj, row_idx, col_idx) : false;
@@ -241,7 +251,7 @@ bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const point& p)
 
 // returns by reference the area (and associated object if fixed) at (row_idx, col_idx)
 
-bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& row_idx, const int_t& col_idx) {
+bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& row_idx, const int_t& col_idx) const {
     if (row_idx < rows.size() && col_idx < cols.size()) {
         
         // check fixed areas...
@@ -266,7 +276,7 @@ bool grid::get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& ro
 
 // returns the cell row and column indexes at point p
 
-bool grid::get_cell_coord(int_t& row_index, int_t& col_index, const point& p) {
+bool grid::get_cell_coord(int_t& row_index, int_t& col_index, const point& p) const {
     int_t row_span_index, col_span_index;
 
     if (get_span_index(row_span_index, rows, p.y)

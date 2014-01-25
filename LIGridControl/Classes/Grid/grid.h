@@ -218,12 +218,14 @@ namespace li {
             float get_width() const { return cols.empty() ? 0 : cols.back().get_end(); }
             float get_height() const { return rows.empty() ? 0 : rows.back().get_end(); }
             
-            bool get_cell_coord(int_t& row_idx, int_t& col_idx, const point& p);
+            bool get_cell_coord(int_t& row_idx, int_t& col_idx, const point& p) const;
 
-            bool get_cell_area(area& cell_area, __strong id& cell_obj, const point& p);
-            bool get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& row_idx, const int_t& col_idx);
+            bool get_cell_area(area& cell_area, __strong id& cell_obj, const point& p) const;
+            bool get_cell_area(area& cell_area, __strong id& cell_obj, const int_t& row_idx, const int_t& col_idx) const;
             
-            bool get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const interval& row_interval, const interval& column_interval);
+            bool get_fixed_area(area& cell_area, const __strong id& cell_obj) const;
+            
+            bool get_fixed_areas(std::vector<area>& fixed_areas, std::vector<__strong id>& fixed_objs, const interval& row_interval, const interval& column_interval) const;
             
             rect get_area_rect(const area& cell_area) const;
             rect get_area_rect(const int_t& row, const int_t& col) const;
