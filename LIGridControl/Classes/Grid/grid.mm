@@ -41,7 +41,7 @@ static inline bool is_divider(unsigned long index) {
 // a zero-length divider is added prior to adding the cell span.
 
 static void push_cell(span_list& spans, float size) {
-    const float max = spans.back().get_end();
+    const float max = spans.empty() ? 0 : spans.back().get_end();
     
     if (!is_cell(spans.size())) {
         spans.push_back(span(max));
@@ -55,7 +55,7 @@ static void push_cell(span_list& spans, float size) {
 // a zero-length cell is added prior to adding the divider span.
 
 static void push_divider(span_list& spans, float size) {
-    const float max = spans.back().get_end();
+    const float max = spans.empty() ? 0 : spans.back().get_end();
     
     if (!is_divider(spans.size())) {
         spans.push_back(span(max, 0));

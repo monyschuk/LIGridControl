@@ -48,7 +48,6 @@
         _tableView.columnHeader.nextResponder = self;
         
         self.nextResponder = _tableView;
-
     }
 }
 
