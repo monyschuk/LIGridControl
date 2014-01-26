@@ -51,6 +51,20 @@
     }
 }
 
+- (void)dealloc {
+    _tableView.grid.delegate = nil;
+    _tableView.rowHeader.delegate = nil;
+    _tableView.columnHeader.delegate = nil;
+    
+    _tableView.grid.dataSource = nil;
+    _tableView.rowHeader.dataSource = nil;
+    _tableView.columnHeader.dataSource = nil;
+    
+    _tableView.grid.nextResponder = _tableView;
+    _tableView.rowHeader.nextResponder = _tableView;
+    _tableView.columnHeader.nextResponder = _tableView;
+}
+
 - (void)reloadData {
     [self.tableView.columnHeader reloadData];
     [self.tableView.rowHeader reloadData];
