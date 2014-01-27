@@ -63,6 +63,8 @@
     _tableView.grid.nextResponder = _tableView;
     _tableView.rowHeader.nextResponder = _tableView;
     _tableView.columnHeader.nextResponder = _tableView;
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:nil object:nil];
 }
 
 - (void)reloadData {
