@@ -51,15 +51,15 @@
      [NSLayoutConstraint constraintWithItem:_rowShadow attribute:NSLayoutAttributeWidth
                                   relatedBy:NSLayoutRelationEqual
                                      toItem:nil attribute:NSLayoutAttributeNotAnAttribute
-                                 multiplier:1 constant:8]];
+                                 multiplier:1 constant:4]];
     
     [_columnShadow addConstraint:
      [NSLayoutConstraint constraintWithItem:_columnShadow attribute:NSLayoutAttributeHeight
                                   relatedBy:NSLayoutRelationEqual
                                      toItem:nil attribute:NSLayoutAttributeNotAnAttribute
-                                 multiplier:1 constant:8]];
+                                 multiplier:1 constant:4]];
 
-    [self setSubviews:@[_grid, _rowHeader, _rowShadow, _columnHeader, _columnShadow]];
+    [self setSubviews:@[_grid, _columnHeader, _columnShadow, _rowHeader, _rowShadow]];
     [self setNeedsUpdateConstraints:YES];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
