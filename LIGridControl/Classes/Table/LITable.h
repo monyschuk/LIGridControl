@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 Mark Onyschuk. All rights reserved.
 //
 
-#import <Cocoa/Cocoa.h>
+#import "LITableLayouts.h"
 
 @class LIGrid, LIShadow, LITableLayout;
 
@@ -15,7 +15,9 @@
 #pragma mark -
 #pragma mark Layout Manager
 
-@property(nonatomic, strong) LITableLayout *layoutManager;
+@property(nonatomic, strong) id <LITableLayouts> tableLayout;
+
+@property(nonatomic, strong) LITableLayout *layoutManager __attribute__((deprecated));
 
 #pragma mark -
 #pragma mark Views

@@ -10,6 +10,7 @@
 
 @class LITable;
 
+ __attribute__((deprecated))
 @interface LITableLayout : NSResponder <LIGridDataSource, LIGridDelegate>
 
 - (void)awakeInTableView:(LITable *)table;

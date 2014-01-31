@@ -163,6 +163,14 @@
     }
 }
 
+- (void)setTableLayout:(id<LITableLayouts>)tableLayout {
+    if (_tableLayout != tableLayout) {
+        if (_tableLayout) [_tableLayout willDetachLayoutToTableView:self];
+        _tableLayout = tableLayout;
+        if (_tableLayout) [_tableLayout didAttachLayoutToTableView:self];
+    }
+}
+
 #pragma mark -
 #pragma mark Layout
 

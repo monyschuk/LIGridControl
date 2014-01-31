@@ -17,6 +17,7 @@
 		4D117772183AC8E30055CEB0 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D117751183AC8E30055CEB0 /* Cocoa.framework */; };
 		4D11777A183AC8E30055CEB0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4D117778183AC8E30055CEB0 /* InfoPlist.strings */; };
 		4D11777C183AC8E30055CEB0 /* LIGridControlTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */; };
+		4D2A0C3F189BD8FF0082C623 /* LITableLayout.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D2A0C3E189BD8FF0082C623 /* LITableLayout.m */; };
 		4D84B8B8184244F60053E6CA /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D84B8B7184244F60053E6CA /* QuartzCore.framework */; };
 		4DBC52ED186625D300C23B8E /* LIDocumentView.m in Sources */ = {isa = PBXBuildFile; fileRef = 4DBC52EC186625D300C23B8E /* LIDocumentView.m */; };
 		4DC128021865CC5200420C9C /* grid.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DC127F21865CC5200420C9C /* grid.mm */; };
@@ -59,6 +60,9 @@
 		4D117777183AC8E30055CEB0 /* LIGridControlTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LIGridControlTests-Info.plist"; sourceTree = "<group>"; };
 		4D117779183AC8E30055CEB0 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		4D11777B183AC8E30055CEB0 /* LIGridControlTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LIGridControlTests.m; sourceTree = "<group>"; };
+		4D2A0C3C189BD8EF0082C623 /* LITableLayouts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LITableLayouts.h; sourceTree = "<group>"; };
+		4D2A0C3D189BD8FF0082C623 /* LITableLayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LITableLayout.h; sourceTree = "<group>"; };
+		4D2A0C3E189BD8FF0082C623 /* LITableLayout.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LITableLayout.m; sourceTree = "<group>"; };
 		4D84B8B7184244F60053E6CA /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		4DBC52EB186625D300C23B8E /* LIDocumentView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LIDocumentView.h; path = LIGridControl/LIDocumentView.h; sourceTree = SOURCE_ROOT; };
 		4DBC52EC186625D300C23B8E /* LIDocumentView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = LIDocumentView.m; path = LIGridControl/LIDocumentView.m; sourceTree = SOURCE_ROOT; };
@@ -228,6 +232,9 @@
 				4DC128011865CC5200420C9C /* LITable.m */,
 				4DC127FE1865CC5200420C9C /* LIShadow.h */,
 				4DC127FF1865CC5200420C9C /* LIShadow.m */,
+				4D2A0C3D189BD8FF0082C623 /* LITableLayout.h */,
+				4D2A0C3E189BD8FF0082C623 /* LITableLayout.m */,
+				4D2A0C3C189BD8EF0082C623 /* LITableLayouts.h */,
 			);
 			path = Table;
 			sourceTree = "<group>";
@@ -340,6 +347,7 @@
 				4DBC52ED186625D300C23B8E /* LIDocumentView.m in Sources */,
 				4DC128081865CC5200420C9C /* LIShadow.m in Sources */,
 				4DC128041865CC5200420C9C /* LIGridArea.mm in Sources */,
+				4D2A0C3F189BD8FF0082C623 /* LITableLayout.m in Sources */,
 				4DC128071865CC5200420C9C /* LIGridSelection.m in Sources */,
 				4DC128061865CC5200420C9C /* LIGridField.m in Sources */,
 				4DC128091865CC5200420C9C /* LITable.m in Sources */,

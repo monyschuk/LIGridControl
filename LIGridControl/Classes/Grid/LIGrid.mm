@@ -693,7 +693,6 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 
 - (void)viewWillStartLiveResize {
     self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawNever;
-    
 }
 - (void)viewDidEndLiveResize {
     self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawBeforeViewResize;
