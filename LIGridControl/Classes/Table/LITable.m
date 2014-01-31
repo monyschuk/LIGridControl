@@ -165,10 +165,28 @@
 
 - (void)setTableLayout:(id<LITableLayouts>)tableLayout {
     if (_tableLayout != tableLayout) {
-        if (_tableLayout) [_tableLayout willDetachLayoutToTableView:self];
+        if (_tableLayout) {
+            [_tableLayout willDetachLayoutToTableView:self];
+            [_tableLayout setTableView:nil];
+        }
+        
         _tableLayout = tableLayout;
-        if (_tableLayout) [_tableLayout didAttachLayoutToTableView:self];
+        
+        if (_tableLayout) {
+            [_tableLayout setTableView:self];
+            [_tableLayout didAttachLayoutToTableView:self];
+        }
     }
+}
+
+
+#pragma mark -
+#pragma mark Reload
+
+- (void)reloadData {
+    [_grid reloadData];
+    [_rowHeader reloadData];
+    [_columnHeader reloadData];
 }
 
 #pragma mark -

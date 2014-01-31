@@ -25,4 +25,10 @@
 @property(readonly, nonatomic, strong) LIShadow *rowShadow, *columnShadow;
 @property(readonly, nonatomic, strong) LIGrid *grid, *rowHeader, *columnHeader;
 
+#pragma mark -
+#pragma mark Reload
+
+- (void)reloadData;
+
+
 @end
