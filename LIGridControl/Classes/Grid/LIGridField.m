@@ -16,12 +16,22 @@
 
 - (id)initWithFrame:(NSRect)frameRect {
     if ((self = [super initWithFrame:frameRect])) {
-        [self setWantsLayer:YES];
-        [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
-        
-        [self.cell configureGridCell];
+        [self configureGridField];
     }
     return self;
+}
+
+- (void)awakeFromNib {
+    [super awakeFromNib];
+    
+    [self configureGridField];
+}
+
+- (void)configureGridField {
+    [self setWantsLayer:YES];
+    [self setLayerContentsRedrawPolicy:NSViewLayerContentsRedrawOnSetNeedsDisplay];
+    
+    [self.cell configureGridCell];
 }
 
 - (BOOL)isVertical {
