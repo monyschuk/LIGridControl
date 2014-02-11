@@ -183,6 +183,12 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     NSUInteger columnCount = [self.dataSource gridControlNumberOfColumns:self];
     NSUInteger fixedAreaCount = [self.dataSource gridControlNumberOfFixedAreas:self];
 
+    // catch underflows...
+    
+    if (rowCount == NSUIntegerMax) rowCount = 0;
+    if (columnCount == NSUIntegerMax) columnCount = 0;
+    if (fixedAreaCount == NSUIntegerMax) fixedAreaCount = 0;
+    
     _grid.clear();
     _grid.reserve_rows(rowCount);
     _grid.reserve_cols(columnCount);
