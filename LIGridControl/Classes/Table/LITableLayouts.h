@@ -14,6 +14,6 @@
 @property(nonatomic, weak) LITable *tableView;
 
 - (void)didAttachLayoutToTableView:(LITable *)tableView;
-- (void)willDetachLayoutToTableView:(LITable *)tableView;
+- (void)willDetachLayoutFromTableView:(LITable *)tableView;
 
 @end

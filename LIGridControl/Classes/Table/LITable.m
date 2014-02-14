@@ -168,7 +168,7 @@
 - (void)setTableLayout:(id<LITableLayouts>)tableLayout {
     if (_tableLayout != tableLayout) {
         if (_tableLayout) {
-            [_tableLayout willDetachLayoutToTableView:self];
+            [_tableLayout willDetachLayoutFromTableView:self];
             [_tableLayout setTableView:nil];
         }
         
