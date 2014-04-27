@@ -11,7 +11,6 @@
 #import <QuartzCore/QuartzCore.h>
 
 @implementation LIShadow {
-    CAShapeLayer    *mask;
     CAGradientLayer *gradient;
 }
 
@@ -70,18 +69,14 @@
         [gradient setColors:@[(id)fromColor.CGColor, (id)toColor.CGColor]];
         
         [self.layer addSublayer:gradient];
-        
-        mask = [CAShapeLayer layer];
-        
-        [gradient setMask:mask];
+
+        [self updateGradientInRect:layerBounds];
     }
-    
-    [self updateGradientInRect:layerBounds];
-    [self updateMaskInRect:layerBounds];
+
+    [gradient setFrame:layerBounds];
 }
 
 - (void)updateGradientInRect:(NSRect)frameRect {
-    [gradient setFrame:frameRect];
     
     NSColor *fromColor = self.shadowColor ? self.shadowColor : [NSColor colorWithCalibratedWhite:0 alpha:0.15];
     NSColor *toColor   = [NSColor colorWithCalibratedWhite:0 alpha:0.00];
@@ -109,59 +104,6 @@
             [gradient setEndPoint:CGPointMake(1, 0)];
             break;
     }
-}
-
-- (void)updateMaskInRect:(NSRect)frameRect {
-    CGFloat minx = CGRectGetMinX(frameRect);
-    CGFloat maxx = CGRectGetMaxX(frameRect);
-    CGFloat midx = CGRectGetMidX(frameRect);
-    CGFloat w    = CGRectGetWidth(frameRect);
-    
-    CGFloat miny = CGRectGetMinY(frameRect);
-    CGFloat maxy = CGRectGetMaxY(frameRect);
-    CGFloat midy = CGRectGetMidY(frameRect);
-    CGFloat h    = CGRectGetHeight(frameRect);
-    
-    // our mask is an arced path
-    CGMutablePathRef path = CGPathCreateMutable();
-    
-    switch (self.shadowDirection) {
-        case LIShadowDirection_Up:
-            CGPathMoveToPoint(path, NULL, minx, maxy);
-            CGPathAddLineToPoint(path, NULL, minx, maxy-1);
-            CGPathAddCurveToPoint(path, NULL, midx, maxy-(2*h), midx, maxy-(2*h), maxx, maxy-1);
-            CGPathAddLineToPoint(path, NULL, maxx, maxy);
-            CGPathCloseSubpath(path);
-            break;
-            
-        case LIShadowDirection_Down:
-            CGPathMoveToPoint(path, NULL, minx, miny);
-            CGPathAddLineToPoint(path, NULL, minx, miny+1);
-            CGPathAddCurveToPoint(path, NULL, midx, miny+(2*h), midx, miny+(2*h), maxx, miny+1);
-            CGPathAddLineToPoint(path, NULL, maxx, miny);
-            CGPathCloseSubpath(path);
-            break;
-            
-        case LIShadowDirection_Left:
-            CGPathMoveToPoint(path, NULL, maxx, miny);
-            CGPathAddLineToPoint(path, NULL, maxx-1, miny);
-            CGPathAddCurveToPoint(path, NULL, maxx-(2*w), midy, maxx-(2*w), midy, maxx-1, maxy);
-            CGPathAddLineToPoint(path, NULL, maxx, maxy);
-            CGPathCloseSubpath(path);
-            break;
-            
-        case LIShadowDirection_Right:
-            CGPathMoveToPoint(path, NULL, minx, miny);
-            CGPathAddLineToPoint(path, NULL, minx+1, miny);
-            CGPathAddCurveToPoint(path, NULL, minx+(2*w), midy, minx+(2*w), midy, minx+1, maxy);
-            CGPathAddLineToPoint(path, NULL, minx, maxy);
-            CGPathCloseSubpath(path);
-            break;
-    }
-    
-    mask.path = path;
-    
-    CGPathRelease(path);
 }
 
 @end
