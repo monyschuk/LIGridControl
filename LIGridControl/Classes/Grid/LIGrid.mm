@@ -609,14 +609,18 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 #pragma mark Animation
 
 - (void)scrollToArea:(LIGridArea *)area animate:(BOOL)shouldAnimate {
+    NSRect scrollRect = [self rectForArea:area];
+    if (self.scrollToVisibleBlock) scrollRect = self.scrollToVisibleBlock(scrollRect);
+    
     if (shouldAnimate) {
         [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
             [context setAllowsImplicitAnimation:YES];
-            [self scrollRectToVisible:[self rectForArea:area]];
-        } completionHandler:^{
-        }];
+            [self scrollRectToVisible:scrollRect];
+
+        } completionHandler:nil];
+        
     } else {
-        [self scrollRectToVisible:[self rectForArea:area]];
+        [self scrollRectToVisible:scrollRect];
     }
 }
 
@@ -707,3 +711,4 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 @end
 
 NSString* LIGridControlSelectionDidChangeNotification = @"LIGridControlSelectionDidChangeNotification";
+NSString* LIGridControlWillScrollRectToVisibleNotification = @"LIGridControlWillScrollRectToVisibleNotification";

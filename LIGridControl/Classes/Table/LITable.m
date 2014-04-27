@@ -56,6 +56,29 @@
                                              selector:@selector(headerFrameDidChange:)
                                                  name:NSViewFrameDidChangeNotification
                                                object:_columnHeader];
+    
+    
+    __weak LIGrid *weakGrid = _grid;
+    __weak LIGrid *weakRowHeader = _rowHeader;
+    __weak LIGrid *weakColumnHeader = _columnHeader;
+    
+    [_grid setScrollToVisibleBlock:^NSRect(NSRect visibleRect) {
+        // FIXME: get real values here...
+        CGFloat firstVerticalDividerThickness = 0.5;
+        CGFloat firstHorizontalDividerThickness = 0.5;
+        
+        NSRect visibleRectInRowHeader = [weakRowHeader convertRect:visibleRect fromView:weakGrid];
+        NSRect visibleRectInColumnHeader = [weakColumnHeader convertRect:visibleRect fromView:weakGrid];
+        
+        if (NSMinX(visibleRectInRowHeader) < NSMaxX(weakRowHeader.bounds)) {
+            visibleRect = NSOffsetRect(visibleRect, -NSWidth(weakRowHeader.bounds) - firstHorizontalDividerThickness, 0);
+        }
+        if (NSMinY(visibleRectInColumnHeader) < NSMaxY(weakColumnHeader.bounds)) {
+            visibleRect = NSOffsetRect(visibleRect, 0, -NSHeight(weakColumnHeader.bounds) - firstVerticalDividerThickness);
+        }
+        
+        return visibleRect;
+    }];
 }
 
 - (void)dealloc {

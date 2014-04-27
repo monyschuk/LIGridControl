@@ -42,6 +42,7 @@
 @end
 
 typedef BOOL (^LIGridKeyDownHandlerBlock)(NSEvent *keyEvent);
+typedef NSRect (^LIGridScrollRectToVisibleBlock)(NSRect desiredRect);
 
 @interface LIGrid : NSControl
 
@@ -96,6 +97,7 @@ typedef BOOL (^LIGridKeyDownHandlerBlock)(NSEvent *keyEvent);
 #pragma mark Animation
 
 - (void)scrollToArea:(LIGridArea *)area animate:(BOOL)shouldAnimate;
+@property(nonatomic, copy) LIGridScrollRectToVisibleBlock scrollToVisibleBlock;
 
 #pragma mark -
 #pragma mark Drawing
@@ -113,3 +115,4 @@ typedef BOOL (^LIGridKeyDownHandlerBlock)(NSEvent *keyEvent);
 @end
 
 extern NSString* LIGridControlSelectionDidChangeNotification;
+
