@@ -12,10 +12,7 @@
 #import "LIShadow.h"
 #import "LITableLayout.h"
 
-@implementation LITable {
-    NSArray *_constraints;
-    NSLayoutConstraint *_topFloatConstraint, *_leftFloatConstraint, *_topGridConstraint, *_leftGridConstraint;
-}
+@implementation LITable
 
 #pragma mark -
 #pragma mark Lifecycle
@@ -48,20 +45,8 @@
     [_rowShadow setShadowDirection:LIShadowDirection_Right];
     [_columnShadow setShadowDirection:LIShadowDirection_Down];
     
-    [_rowShadow addConstraint:
-     [NSLayoutConstraint constraintWithItem:_rowShadow attribute:NSLayoutAttributeWidth
-                                  relatedBy:NSLayoutRelationEqual
-                                     toItem:nil attribute:NSLayoutAttributeNotAnAttribute
-                                 multiplier:1 constant:8]];
-    
-    [_columnShadow addConstraint:
-     [NSLayoutConstraint constraintWithItem:_columnShadow attribute:NSLayoutAttributeHeight
-                                  relatedBy:NSLayoutRelationEqual
-                                     toItem:nil attribute:NSLayoutAttributeNotAnAttribute
-                                 multiplier:1 constant:8]];
-
     [self setSubviews:@[_grid, _columnHeader, _columnShadow, _rowHeader, _rowShadow]];
-    [self setNeedsUpdateConstraints:YES];
+    [self setNeedsLayout:YES];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(headerFrameDidChange:)
@@ -90,13 +75,15 @@
         CGFloat gridOffset = NSMinX(self.grid.frame);
         
         if (fabs(width-gridOffset) > 0.1) {
-            [self setNeedsUpdateConstraints:YES];
+            [self invalidateIntrinsicContentSize];
+            [self setNeedsLayout:YES];
         }
     } else if (header == _columnHeader) {
         CGFloat height = NSHeight(header.frame);
         CGFloat gridOffset = NSMinY(self.grid.frame);
         if (fabs(height-gridOffset) > 0.1) {
-            [self setNeedsUpdateConstraints:YES];
+            [self invalidateIntrinsicContentSize];
+            [self setNeedsLayout:YES];
         }
     }
 }
@@ -123,37 +110,15 @@
     [_rowShadow setHidden:[self rowHeaderFloatOffset] < 0.1];
     [_columnShadow setHidden:[self columnHeaderFloatOffset] < 0.1];
     
-    [self setNeedsUpdateConstraints:YES];
+    [self setNeedsLayout:YES];
 }
 
 - (CGFloat)rowHeaderFloatOffset {
-    NSClipView *clipView = self.enclosingScrollView.contentView;
-    
-    NSRect clipBounds = [clipView bounds];
-    NSRect tableBounds = [clipView convertRect:[self bounds] fromView:self];
-    NSRect headerBounds = [clipView convertRect:[self.rowHeader bounds] fromView:self.rowHeader];
-    
-    if (NSMinX(tableBounds) < NSMinX(clipBounds)
-        && (NSMaxX(tableBounds) - NSMinX(clipBounds)) > NSWidth(headerBounds)) {
-        return NSMinX(clipBounds) - NSMinX(tableBounds);
-    }
-    
-    return 0;
+    return NSMinX(self.visibleRect);
 }
 
 - (CGFloat)columnHeaderFloatOffset {
-    NSClipView *clipView = self.enclosingScrollView.contentView;
-
-    NSRect clipBounds = [clipView bounds];
-    NSRect tableBounds = [clipView convertRect:[self bounds] fromView:self];
-    NSRect headerBounds = [clipView convertRect:[self.columnHeader bounds] fromView:self.rowHeader];
-    
-    if (NSMinY(tableBounds) < NSMinY(clipBounds)
-        && (NSMaxY(tableBounds) - NSMinY(clipBounds)) > NSHeight(headerBounds)) {
-        return NSMinY(clipBounds) - NSMinY(tableBounds);
-    }
-
-    return 0;
+    return NSMinY(self.visibleRect);
 }
 
 #pragma mark -
@@ -195,101 +160,57 @@
 #pragma mark -
 #pragma mark Layout
 
-- (void)updateConstraints {
-    [super updateConstraints];
+- (void)layout {
+    [super layout];
     
-    if (_constraints == nil && (_grid && _rowHeader && _columnHeader && _rowShadow && _columnShadow)) {
-        NSMutableArray  *constraints  = @[].mutableCopy;
-        NSDictionary    *subviews     = NSDictionaryOfVariableBindings(_grid, _rowHeader, _columnHeader, _rowShadow, _columnShadow);
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_grid]"
-                                                 options:0
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        _leftGridConstraint = constraints.lastObject;
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_grid]"
-                                                 options:0
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        _topGridConstraint = constraints.lastObject;
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"H:[_grid]|"
-                                                 options:0
-                                                 metrics:nil
-                                                   views:subviews]];
+    CGFloat gridWidth = NSWidth(self.grid.frame);
+    CGFloat gridHeight = NSHeight(self.grid.frame);
+    
+    CGFloat rowHeaderWidth = NSWidth(self.rowHeader.frame);
+    CGFloat colHeaderHeight = NSHeight(self.columnHeader.frame);
 
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"V:[_grid]|"
-                                                 options:0
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_rowHeader]"
-                                                 options:0
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        _leftFloatConstraint = constraints.lastObject;
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_columnHeader]"
-                                                 options:0
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        _topFloatConstraint = constraints.lastObject;
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"H:[_rowHeader][_rowShadow]"
-                                                 options:NSLayoutFormatAlignAllTop|NSLayoutFormatAlignAllBottom
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        [constraints addObjectsFromArray:
-         [NSLayoutConstraint constraintsWithVisualFormat:@"V:[_columnHeader][_columnShadow]"
-                                                 options:NSLayoutFormatAlignAllLeft|NSLayoutFormatAlignAllRight
-                                                 metrics:nil
-                                                   views:subviews]];
-        
-        [constraints addObject:
-         [NSLayoutConstraint constraintWithItem:_rowHeader attribute:NSLayoutAttributeTop
-                                      relatedBy:NSLayoutRelationEqual
-                                         toItem:_grid attribute:NSLayoutAttributeTop
-                                     multiplier:1 constant:0]];
-        [constraints addObject:
-         [NSLayoutConstraint constraintWithItem:_columnHeader attribute:NSLayoutAttributeLeft
-                                      relatedBy:NSLayoutRelationEqual
-                                         toItem:_grid attribute:NSLayoutAttributeLeft
-                                     multiplier:1 constant:0]];
-        
-        // add constraints
-        [self addConstraints:constraints];
-        _constraints = constraints;
+    // size to fit contents...
+    NSSize oldSize = self.frame.size;
+    NSSize newSize = NSMakeSize(gridWidth + rowHeaderWidth, gridHeight + colHeaderHeight);
     
+    if (!NSEqualSizes(oldSize, newSize)) {
+        [self setFrameSize:NSMakeSize(gridWidth + rowHeaderWidth, gridHeight + colHeaderHeight)];
     }
-
-    _topGridConstraint.constant = NSHeight(self.columnHeader.frame);
-    _leftGridConstraint.constant = NSWidth(self.rowHeader.frame);
     
-    _leftFloatConstraint.constant = [self rowHeaderFloatOffset];
-    _topFloatConstraint.constant = [self columnHeaderFloatOffset];
+    // reposition table grids...
+    NSRect rowFrame, colFrame, gridFrame = self.bounds;
+
+    NSDivideRect(gridFrame, &rowFrame, &gridFrame, rowHeaderWidth,  NSMinXEdge);
+    NSDivideRect(gridFrame, &colFrame, &gridFrame, colHeaderHeight, NSMinYEdge);
+    
+    rowFrame.origin.y = colHeaderHeight; rowFrame.size.height -= colHeaderHeight;
+    
+    rowFrame = NSOffsetRect(rowFrame, [self rowHeaderFloatOffset], 0);
+    colFrame = NSOffsetRect(colFrame, 0, [self columnHeaderFloatOffset]);
+    
+    self.grid.frame = gridFrame;
+    self.rowHeader.frame = rowFrame;
+    self.columnHeader.frame = colFrame;
+    
+    // reposition header shadows...
+    NSRect rowShadowFrame, colShadowFrame;
+    
+    rowShadowFrame = NSOffsetRect(rowFrame, NSWidth(rowFrame), 0); rowShadowFrame.size.width = 10;
+    colShadowFrame = NSOffsetRect(colFrame, 0, NSHeight(colFrame)); colShadowFrame.size.height = 10;
+    
+    self.rowShadow.frame = rowShadowFrame;
+    self.columnShadow.frame = colShadowFrame;
 }
 
-//#pragma mark -
-//#pragma mark Responsive Scrolling
-//
-//- (void)prepareContentInRect:(NSRect)rect {
-//    if ([self needsUpdateConstraints]) {
-//        [self updateConstraintsForSubtreeIfNeeded];
-//    }
-//}
+- (NSSize)intrinsicContentSize {
+    CGFloat gridWidth = NSWidth(self.grid.frame);
+    CGFloat gridHeight = NSHeight(self.grid.frame);
+    
+    CGFloat rowHeaderWidth = NSWidth(self.rowHeader.frame);
+    CGFloat colHeaderHeight = NSHeight(self.columnHeader.frame);
+
+    return NSMakeSize(gridWidth + rowHeaderWidth, gridHeight + colHeaderHeight);
+}
 
 #pragma mark -
 #pragma mark Drawing
