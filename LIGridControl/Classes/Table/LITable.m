@@ -97,14 +97,23 @@
         CGFloat width = NSWidth(header.frame);
         CGFloat gridOffset = NSMinX(self.grid.frame);
         
-        if (fabs(width-gridOffset) > 0.1) {
+        CGFloat height = NSHeight(header.frame);
+        CGFloat gridHeight = NSHeight(self.grid.frame);
+        
+        if (fabs(width-gridOffset) > 0.1
+            || fabs(height-gridHeight) > 0.1) {
             [self invalidateIntrinsicContentSize];
             [self setNeedsLayout:YES];
         }
     } else if (header == _columnHeader) {
         CGFloat height = NSHeight(header.frame);
         CGFloat gridOffset = NSMinY(self.grid.frame);
-        if (fabs(height-gridOffset) > 0.1) {
+        
+        CGFloat width = NSWidth(header.frame);
+        CGFloat gridWidth = NSWidth(self.grid.frame);
+        
+        if (fabs(height-gridOffset) > 0.1
+            || fabs(width-gridWidth) > 0.1) {
             [self invalidateIntrinsicContentSize];
             [self setNeedsLayout:YES];
         }
@@ -185,7 +194,7 @@
 
 - (void)layout {
     [super layout];
-    
+
     CGFloat gridWidth = NSWidth(self.grid.frame);
     CGFloat gridHeight = NSHeight(self.grid.frame);
     
