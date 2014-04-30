@@ -116,32 +116,68 @@
             || fabs(width-gridWidth) > 0.1) {
             [self invalidateIntrinsicContentSize];
             [self setNeedsLayout:YES];
+            [self layoutSubtreeIfNeeded];
         }
     }
 }
 
 - (void)viewWillMoveToSuperview:(NSView *)newSuperview {
+    [self stopObservingClipBounds];
+}
+- (void)viewDidMoveToSuperview {
+    [self startObservingClipBounds];
+}
+
+- (void)stopObservingClipBounds {
     if (self.enclosingScrollView) {
         [[NSNotificationCenter defaultCenter] removeObserver:self
                                                         name:NSViewBoundsDidChangeNotification
                                                       object:self.enclosingScrollView.contentView];
     }
+    
 }
-- (void)viewDidMoveToSuperview {
+- (void)startObservingClipBounds {
     if (self.enclosingScrollView) {
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(clipViewBoundsDidChange:)
-                                                        name:NSViewBoundsDidChangeNotification
-                                                      object:self.enclosingScrollView.contentView];
+                                                     name:NSViewBoundsDidChangeNotification
+                                                   object:self.enclosingScrollView.contentView];
         
         [self clipViewBoundsDidChange:nil];
     }
 }
 
 - (void)clipViewBoundsDidChange:(NSNotification *)notification {
+    CGFloat rowOffset = [self rowHeaderFloatOffset];
+    CGFloat columnOffset = [self columnHeaderFloatOffset];
+    
+    if (self.rowHeader.superview == self) {
+        if (rowOffset) {
+            [self.enclosingScrollView addFloatingSubview:self.rowHeader forAxis:NSEventGestureAxisHorizontal];
+            [self.enclosingScrollView addFloatingSubview:self.rowShadow forAxis:NSEventGestureAxisHorizontal];
+        }
+    } else {
+        if (rowOffset == 0) {
+            [self addSubview:[self rowHeader]];
+            [self addSubview:[self rowShadow]];
+        }
+    }
+    
+    if (self.columnHeader.superview == self) {
+        if (columnOffset) {
+            [self.enclosingScrollView addFloatingSubview:self.columnHeader forAxis:NSEventGestureAxisVertical];
+            [self.enclosingScrollView addFloatingSubview:self.columnShadow forAxis:NSEventGestureAxisVertical];
+        }
+    } else {
+        if (columnOffset == 0) {
+            [self addSubview:[self columnHeader]];
+            [self addSubview:[self columnShadow]];
+        }
+    }
+
     [_rowShadow setHidden:[self rowHeaderFloatOffset] < 0.1];
     [_columnShadow setHidden:[self columnHeaderFloatOffset] < 0.1];
-    
+
     [self setNeedsLayout:YES];
 }
 
@@ -178,7 +214,6 @@
         }
     }
 }
-
 
 #pragma mark -
 #pragma mark Reload
@@ -217,8 +252,25 @@
     
     rowFrame.origin.y = colHeaderHeight; rowFrame.size.height -= colHeaderHeight;
     
-    rowFrame = NSOffsetRect(rowFrame, [self rowHeaderFloatOffset], 0);
-    colFrame = NSOffsetRect(colFrame, 0, [self columnHeaderFloatOffset]);
+    if (self.rowHeader.superview == self) {
+        // fixed row header
+        rowFrame = NSOffsetRect(rowFrame, [self rowHeaderFloatOffset], 0);
+        
+    } else {
+        // floating row header
+        rowFrame = [self.rowHeader.superview convertRect:rowFrame fromView:self];
+        rowFrame.origin.x = 0;
+    }
+    
+    if (self.columnHeader.superview == self) {
+        // fixed column header
+        colFrame = NSOffsetRect(colFrame, 0, [self columnHeaderFloatOffset]);
+        
+    } else {
+        // floating column header
+        colFrame = [self.columnHeader.superview convertRect:colFrame fromView:self];
+        colFrame.origin.y = 0;
+    }
     
     self.grid.frame = gridFrame;
     self.rowHeader.frame = rowFrame;
