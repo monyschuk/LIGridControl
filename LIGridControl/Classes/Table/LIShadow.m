@@ -73,7 +73,10 @@
         [self updateGradientInRect:layerBounds];
     }
 
+    [CATransaction begin];
+    [CATransaction setDisableActions:YES];
     [gradient setFrame:layerBounds];
+    [CATransaction commit];
 }
 
 - (void)updateGradientInRect:(NSRect)frameRect {
