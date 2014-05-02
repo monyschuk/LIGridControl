@@ -310,7 +310,6 @@
 }
 
 - (void)updateLayer {
-    
 }
 
 @end

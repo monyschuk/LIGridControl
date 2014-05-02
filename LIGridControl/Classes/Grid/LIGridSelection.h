@@ -46,4 +46,10 @@ typedef enum {
 - (BOOL)containsColumn:(NSUInteger)column;
 - (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column;
 
+#pragma mark -
+#pragma mark Property List Representation
+
+- (NSDictionary *)propertyListRepresentation;
+- (id)initWithPropertyListRepresentation:(NSDictionary *)plist gridControl:(LIGrid *)gridControl;
+
 @end

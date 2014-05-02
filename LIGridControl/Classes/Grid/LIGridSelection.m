@@ -14,7 +14,6 @@
 @interface LIGridSelection()
 @property(readwrite, nonatomic, copy) LIGridArea *gridArea;
 @property(readwrite, nonatomic, strong) LIGridArea *initialArea;
-
 @end
 
 @implementation LIGridSelection
@@ -280,6 +279,25 @@ typedef enum {
 }
 - (BOOL)containsRow:(NSUInteger)row column:(NSUInteger)column {
     return [self.gridArea containsRow:row column:column];
+}
+
+#pragma mark -
+#pragma mark Property List Representation
+
+- (NSDictionary *)propertyListRepresentation {
+    return @{@"row":            @(self.row),
+             @"column":         @(self.column),
+             @"rowRange":       @{@"location": @(self.gridArea.rowRange.location), @"length": @(self.gridArea.rowRange.length)},
+             @"columnRange":    @{@"location": @(self.gridArea.columnRange.location), @"length": @(self.gridArea.columnRange.length)}};
+}
+
+- (id)initWithPropertyListRepresentation:(NSDictionary *)plist gridControl:(LIGrid *)gridControl {
+    if ((self = [self initWithRow:[plist[@"row"] integerValue] column:[plist[@"column"] integerValue] gridControl:gridControl])) {
+        self.gridArea = [[LIGridArea alloc] initWithRowRange:NSMakeRange([plist[@"rowRange"][@"location"] integerValue], [plist[@"rowRange"][@"length"] integerValue])
+                                                 columnRange:NSMakeRange([plist[@"columnRange"][@"location"] integerValue], [plist[@"columnRange"][@"length"] integerValue])
+                                           representedObject:nil];
+    }
+    return self;
 }
 
 @end
