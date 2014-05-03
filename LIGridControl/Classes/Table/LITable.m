@@ -45,7 +45,7 @@
     [_rowShadow setShadowDirection:LIShadowDirection_Right];
     [_columnShadow setShadowDirection:LIShadowDirection_Down];
     
-    [self setSubviews:@[_grid, _columnHeader, _columnShadow, _rowHeader, _rowShadow]];
+    [self setSubviews:@[_grid, _rowHeader, _rowShadow, _columnHeader, _columnShadow]];
     [self setNeedsLayout:YES];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -151,42 +151,24 @@
     CGFloat rowOffset = [self rowHeaderFloatOffset];
     CGFloat columnOffset = [self columnHeaderFloatOffset];
     
-    if (self.rowHeader.superview == self) {
-        if (rowOffset) {
-            [self.enclosingScrollView addFloatingSubview:self.rowHeader forAxis:NSEventGestureAxisHorizontal];
-            [self.enclosingScrollView addFloatingSubview:self.rowShadow forAxis:NSEventGestureAxisHorizontal];
-        }
-    } else {
-        if (rowOffset == 0) {
-            [self addSubview:[self rowHeader]];
-            [self addSubview:[self rowShadow]];
-        }
-    }
-    
-    if (self.columnHeader.superview == self) {
-        if (columnOffset) {
-            [self.enclosingScrollView addFloatingSubview:self.columnHeader forAxis:NSEventGestureAxisVertical];
-            [self.enclosingScrollView addFloatingSubview:self.columnShadow forAxis:NSEventGestureAxisVertical];
-        }
-    } else {
-        if (columnOffset == 0) {
-            [self addSubview:[self columnHeader]];
-            [self addSubview:[self columnShadow]];
-        }
-    }
-
-    [_rowShadow setHidden:[self rowHeaderFloatOffset] < 0.1];
-    [_columnShadow setHidden:[self columnHeaderFloatOffset] < 0.1];
+    [_rowShadow setHidden:rowOffset < 0.1];
+    [_columnShadow setHidden:columnOffset < 0.1];
 
     [self setNeedsLayout:YES];
 }
 
 - (CGFloat)rowHeaderFloatOffset {
-    return NSMinX(self.visibleRect);
+    CGFloat offset = NSMinX(self.visibleRect);
+    CGFloat maxOffset = NSMaxX(self.bounds) - NSWidth(self.rowHeader.frame);
+    
+    return (offset < maxOffset) ? offset : 0;
 }
 
 - (CGFloat)columnHeaderFloatOffset {
-    return NSMinY(self.visibleRect);
+    CGFloat offset = NSMinY(self.visibleRect);
+    CGFloat maxOffset = NSMaxY(self.bounds) - NSHeight(self.columnHeader.frame);
+    
+    return (offset < maxOffset) ? offset : 0;
 }
 
 #pragma mark -
@@ -252,25 +234,8 @@
     
     rowFrame.origin.y = colHeaderHeight; rowFrame.size.height -= colHeaderHeight;
     
-    if (self.rowHeader.superview == self) {
-        // fixed row header
-        rowFrame = NSOffsetRect(rowFrame, [self rowHeaderFloatOffset], 0);
-        
-    } else {
-        // floating row header
-        rowFrame = [self.rowHeader.superview convertRect:rowFrame fromView:self];
-        rowFrame.origin.x = 0;
-    }
-    
-    if (self.columnHeader.superview == self) {
-        // fixed column header
-        colFrame = NSOffsetRect(colFrame, 0, [self columnHeaderFloatOffset]);
-        
-    } else {
-        // floating column header
-        colFrame = [self.columnHeader.superview convertRect:colFrame fromView:self];
-        colFrame.origin.y = 0;
-    }
+    rowFrame = NSOffsetRect(rowFrame, [self rowHeaderFloatOffset], 0);
+    colFrame = NSOffsetRect(colFrame, 0, [self columnHeaderFloatOffset]);
     
     self.grid.frame = gridFrame;
     self.rowHeader.frame = rowFrame;
