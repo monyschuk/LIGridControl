@@ -61,6 +61,9 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
 @property(nonatomic, strong) NSCell *editingCell;
 @property(nonatomic, strong) LIGridArea *editingArea;
 
+// properties used for cell sizing
+@property(nonatomic, strong) NSTrackingArea *cursorTrackingArea;
+
 @end
 
 @implementation LIGrid
@@ -532,6 +535,47 @@ static inline LIGridArea *gridAreaWithArea(const area& cellArea) {
     }
     
     return NO;
+}
+
+#pragma mark -
+#pragma mark Cell Sizing
+
+- (void)setCanResizeRows:(BOOL)canResizeRows {
+    if (_canResizeRows != canResizeRows) {
+        _canResizeRows = canResizeRows;
+
+        [self updateCursorTracking];
+    }
+}
+- (void)setCanResizeColumns:(BOOL)canResizeColumns {
+    if (_canResizeColumns != canResizeColumns) {
+        _canResizeColumns = canResizeColumns;
+        
+        [self updateCursorTracking];
+    }
+}
+
+- (void)updateCursorTracking {
+    BOOL shouldTrackCursor = (self.canResizeRows || self.canResizeColumns);
+    
+    if (shouldTrackCursor) {
+        if (self.cursorTrackingArea == nil) {
+            self.cursorTrackingArea = [[NSTrackingArea alloc] initWithRect:NSZeroRect
+                                                                   options:NSTrackingMouseMoved|NSTrackingActiveInKeyWindow|NSTrackingInVisibleRect
+                                                                     owner:self
+                                                                  userInfo:nil];
+            [self addTrackingArea:self.cursorTrackingArea];
+        }
+    } else {
+        if (self.cursorTrackingArea != nil) {
+            [self removeTrackingArea:self.cursorTrackingArea];
+            self.cursorTrackingArea = nil;
+        }
+    }
+}
+
+- (void)mouseMoved:(NSEvent *)theEvent {
+    NSLog(@"%s", __PRETTY_FUNCTION__);
 }
 
 #pragma mark -

@@ -39,6 +39,10 @@
 - (id)gridControl:(LIGrid *)gridControl objectValueForArea:(LIGridArea *)area;
 - (void)gridControl:(LIGrid *)gridControl setObjectValue:(id)objectValue forArea:(LIGridArea *)area;
 
+@optional
+- (void)gridControl:(LIGrid *)gridControl setHeight:(CGFloat)height   ofRowAtIndex:(NSUInteger)index;
+- (void)gridControl:(LIGrid *)gridControl  setWidth:(CGFloat)width ofColumnAtIndex:(NSUInteger)index;
+
 @end
 
 typedef BOOL (^LIGridKeyDownHandlerBlock)(NSEvent *keyEvent);
@@ -71,12 +75,16 @@ typedef NSRect (^LIGridScrollRectToVisibleBlock)(NSRect desiredRect);
 
 - (LIGridArea *)areaWithRepresentedObject:(id)object;
 
-
 #pragma mark -
 #pragma mark Editing
 
 - (void)editArea:(LIGridArea *)area;
 @property(nonatomic, copy) LIGridKeyDownHandlerBlock keyDownHandler;
+
+#pragma mark -
+#pragma mark Cell Sizing
+
+@property(nonatomic) BOOL canResizeRows, canResizeColumns;
 
 #pragma mark -
 #pragma mark Layout
